@@ -1,6 +1,27 @@
-# Autonomous Audit, Reproduction, and Cross-Dataset Benchmark of Quantum Machine Learning in Clinical Diabetes Diagnostics
+# Autonomous Audit, Reproduction, and Cross-Dataset Benchmark of Quantum Machine Learning in Clinical Diagnostics
 
-A rigorous, reproducible machine learning research audit evaluating **eight landmark Quantum Machine Learning (QML) and Healthcare AI publications (2025–2026)** applied strictly to **clinical diabetes diagnostics and readmission benchmarks**.
+A rigorous, reproducible machine learning research audit evaluating **eight landmark Quantum Machine Learning (QML) and Healthcare AI publications (2025–2026)** with distinct, dedicated clinical domain implementations for **Clinical Diabetes** and **Breast Cancer (WDBC)**.
+
+---
+
+## Clinical Domain Separation
+
+To provide clean separation between clinical conditions, this repository is organized into dedicated domain trees under `clinical_domains/`:
+
+```
+clinical_domains/
+├── breast_cancer/                     # Wisconsin Diagnostic Breast Cancer (WDBC) Benchmark
+│   ├── checkpoints/                   # Quantum Gram matrices (Amplitude, Angle, ZZ-Map)
+│   ├── results/                       # Table 8 reproduction, bootstrap & parametric CIs, confusion matrices
+│   ├── reports/                       # WDBC_AUDIT_REPORT.pdf
+│   └── README.md                      # Detailed WDBC audit summary & analysis
+│
+└── diabetes/                          # Multi-Dataset Clinical Diabetes Benchmark
+    ├── publications_and_reports/      # IEEE Multi-Dataset Paper, Slides, and Synthesis Reports
+    ├── reproduction_code/             # Python scripts replicating Papers 01 through 08
+    ├── benchmark_results/             # Grand cross-dataset evaluation matrix (Pima, Sylhet, CDC, Hosp 130)
+    └── README.md                      # Detailed diabetes audit findings & mathematical derivations
+```
 
 ---
 
@@ -34,39 +55,31 @@ A rigorous, reproducible machine learning research audit evaluating **eight land
 ## Repository Structure
 
 ```
-├── papers/                                         # Original paper PDFs (01 to 08)
-├── repos/                                          # Cloned public repos and downloaded archives
-│   ├── Adaptive-Quantum-Kernel-Selection/          # Daga et al. (2026) repo
-│   ├── QISICGM/                                    # Young (2025) repo
-│   └── yadav_zenodo/                               # Yadav et al. (2026) Zenodo archive
+├── clinical_domains/                               # Dedicated clinical disease domains
+│   ├── breast_cancer/                              # WDBC dataset, Gram matrices, Table 8 audit
+│   └── diabetes/                                   # Diabetes publications, scripts, metrics
 ├── data/                                           # Processed clinical benchmarks
 │   ├── pima/                                       # D1: Pima Indians Diabetes (768 rows, 8 features)
 │   ├── sylhet/                                     # D2: Early Stage Diabetes (UCI 529, 520 rows)
 │   ├── cdc/                                        # D3: CDC BRFSS Diabetes Indicators (UCI 891)
 │   └── diabetes_130_hospitals/                     # D4: Diabetes 130-US Hospitals (UCI 296)
-├── notebooks/                                      # Fully executed in-place Jupyter Notebooks
-│   ├── 00_common.ipynb                             # Shared PennyLane kernels, loaders, statistical tests
-│   ├── 00_setup_and_audit.ipynb                    # Cryptographic audit & baseline distributions
-│   ├── 01_upama_causal_qml.ipynb                   # Paper 1 reproduction & GroupKFold leakage correction
-│   ├── 02_young_qisicgm.ipynb                      # Paper 2 reproduction on augmented vs real Pima
-│   ├── 03_kotha_diabeats.ipynb                     # Paper 3 DiaBeats & interactive risk simulator
-│   ├── 04_zhang_descn_gif.ipynb                    # Paper 4 DeSCN-GIF noise robustness
-│   ├── 05_kiran_hqcan.ipynb                        # Paper 5 4-qubit VQC HQCAN reproduction
-│   ├── 06_sodar_traffic_qml.ipynb                  # Paper 6 Angle vs Amplitude clinical scale erasure
-│   ├── 07_yadav_qsvm_qnn.ipynb                     # Paper 7 Z vs ZZ vs Pauli quantum kernels
-│   ├── 08_daga_adaptive_stacking.ipynb             # Paper 8 Multi-kernel stacking reproduction
-│   ├── 09_cross_dataset_cross_method_benchmark.ipynb # 14-model x 4-dataset grand cross-benchmark
-│   └── 10_final_report.ipynb                       # Master audit table & novel hybrid improvements
-├── results/                                        # Verified CSV metrics and publication PNG figures
-│   ├── paper_claims.csv                            # Dual-pass extracted claims from 8 PDFs
-│   ├── dataset_audit_table.csv                     # Ingestion metadata & SHA-256 checksums
-│   ├── benchmark_grid.csv                          # 280-run cross-dataset benchmark results
-│   ├── benchmark_summary.csv                       # Summary metrics across all models and benchmarks
-│   ├── master_paper_audit_table.csv                # Reported vs reproduced vs corrected table
-│   ├── novel_hybrids_benchmark.csv                 # Evaluation of novel improvements & hybrids
-│   └── *.png                                       # Publication figures
-├── WORKLOG.md                                      # Chronological audit worklog
-├── FINDINGS.md                                     # Comprehensive scientific findings report
+├── latex_report/                                   # LaTeX source files & compiled publications
+│   ├── IEEE_MULTI_DATASET_PAPER.pdf                # Multi-dataset IEEE Transactions publication
+│   ├── MULTI_DATASET_SLIDES.pdf                    # 22-slide conference presentation (16:9 widescreen)
+│   ├── MASTER_MULTI_DATASET_REPORT.pdf             # Extended multi-dataset technical synthesis
+│   └── figures/                                    # Publication vector plots and TikZ assets
+├── notebooks/                                      # Executed Jupyter reproduction notebooks (00 to 10)
+├── notebooks2/                                     # Phase 2 audit pipelines and scripts
+│   ├── src/                                        # Python implementation modules (01 to 09)
+│   └── results/                                    # Structured CSV results and configs
+├── results/                                        # Comprehensive benchmark outputs
+│   ├── breast_cancer/                              # WDBC metrics and confusion matrices
+│   ├── diabetes/                                   # Cross-dataset diabetes benchmarks
+│   ├── confusion_matrices/                         # Raw confusion matrix records
+│   ├── extracted_figs/                             # Author figure comparisons
+│   └── metrics/                                    # Per-paper and bootstrap metric tables
+├── FINDINGS.md                                     # Exhaustive scientific findings & proofs
+├── WORKLOG.md                                      # Audit execution logs
 ├── README.md                                       # Repository overview & navigation guide
 └── requirements.txt                                # Pinned Python dependencies
 ```
@@ -75,7 +88,7 @@ A rigorous, reproducible machine learning research audit evaluating **eight land
 
 ## Reproducibility Guide
 
-All experiments are implemented purely in Jupyter Notebooks (`.ipynb`) and execute cleanly top-to-bottom:
+All experiments are reproducible using the provided Python scripts and Jupyter Notebooks:
 
 ```bash
 # 1. Set up and activate Python environment
@@ -87,20 +100,17 @@ pip install -r requirements.txt
 jupyter nbconvert --to notebook --execute --inplace notebooks/00_setup_and_audit.ipynb
 
 # 3. Run individual paper reproductions (01 through 08)
-jupyter nbconvert --to notebook --execute --inplace notebooks/01_upama_causal_qml.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/02_young_qisicgm.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/03_kotha_diabeats.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/04_zhang_descn_gif.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/05_kiran_hqcan.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/06_sodar_traffic_qml.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/07_yadav_qsvm_qnn.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/08_daga_adaptive_stacking.ipynb
+python notebooks2/src/01_upama_causal_qml.py
+python notebooks2/src/02_young_qisicgm.py
+python notebooks2/src/03_kotha_diabeats.py
+python notebooks2/src/04_zhang_gif_label_noise.py
+python notebooks2/src/05_kiran_hqcan_vqc.py
+python notebooks2/src/06_sodar_angle_amplitude.py
+python notebooks2/src/07_yadav_z_zz_qsvm.py
+python notebooks2/src/08_daga_adaptive_stacking.py
 
-# 4. Run grand cross-dataset benchmark
-jupyter nbconvert --to notebook --execute --inplace notebooks/09_cross_dataset_cross_method_benchmark.ipynb
-
-# 5. Run final report & novel improvements
-jupyter nbconvert --to notebook --execute --inplace notebooks/10_final_report.ipynb
+# 4. Generate synthesis metrics and master comparison tables
+python notebooks2/src/09_summary.py
 ```
 
-For complete scientific analyses, mathematical proofs, and literature comparison tables, see [FINDINGS.md](file:///C:/Research/Adaptive-Quantum-Kernel-Selection/FINDINGS.md).
+For complete scientific analyses, mathematical derivations, and literature comparison tables, see [FINDINGS.md](FINDINGS.md).

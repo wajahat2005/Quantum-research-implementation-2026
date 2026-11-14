@@ -1,0 +1,6 @@
+Metric,Paper_Headline,Paper_Text_ErrorRate,Honest_Test_Acc,Honest_5Fold_CV
+Accuracy,99.7%,96.0% (4% error),72.73%,74.73 +/- 2.75%
+Precision,99.5%,N/A,61.11%,N/A
+Recall,99.3%,N/A,61.11%,N/A
+F1-Score,99.6%,N/A,61.11%,62.84 +/- 2.31%
+ROC-AUC,N/A,N/A,0.7717,0.8079 +/- 0.0148

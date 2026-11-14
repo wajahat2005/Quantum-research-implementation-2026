@@ -1,0 +1,6 @@
+Model,GMean_0pct_Noise,GMean_20pct_Noise,GMean_40pct_Noise,Degradation
+RVFL,0.6814,0.6755,0.5267,0.1547
+SCN (Standard),0.6273,0.6755,0.4753,0.1520
+SCN-GIF (Fuzzy),0.7378,0.6914,0.5719,0.1659
+DeSCN (Ensemble),0.6803,0.6736,0.4572,0.2231
+DeSCN-GIF (Full Model),0.7455,0.6683,0.6080,0.1375
