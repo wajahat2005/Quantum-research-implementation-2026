@@ -1,0 +1,48 @@
+\begin{tabular}{lcccl}
+\toprule Model & Mean diff & Raw $p$ & Holm $p$ & Verdict\\\midrule
+\multicolumn{5}{l}{\textbf{Pima (768 rows)}}\\
+Daga: OOF-Stacking (LR meta) & +0.004 & 0.598 & 1.000 & no clear difference\\
+Daga: Angle-QSVM & -0.001 & 0.912 & 1.000 & no clear difference\\
+Daga: ZZ-QSVM & -0.188 & 0.000 & $<$0.0001 & \BAD{worse}\\
+Daga: Amplitude-QSVM & -0.183 & 0.000 & $<$0.0001 & \BAD{worse}\\
+Daga: Hard-Voting (4 kernels) & -0.166 & 0.000 & $<$0.0001 & \BAD{worse}\\
+Yadav: ZZ-QSVM (linear) bw=inner-CV & +0.003 & 0.868 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=1 & -0.188 & 0.000 & $<$0.0001 & \BAD{worse}\\
+Kiran: HQCAN VQC (4q, 2 layers) & -0.019 & 0.270 & 1.000 & no clear difference\\
+Kiran: RBF-SVM (same 4 PCs, balanced) & -0.005 & 0.837 & 1.000 & no clear difference\\
+Kotha: DiaBeats RF (threshold by inner CV) & +0.029 & 0.256 & 1.000 & no clear difference\\
+\midrule\multicolumn{5}{l}{\textbf{Sylhet (520 rows)}}\\
+Daga: OOF-Stacking (LR meta) & +0.000 & 0.993 & 1.000 & no clear difference\\
+Daga: Angle-QSVM & -0.041 & 0.109 & 1.000 & no clear difference\\
+Daga: ZZ-QSVM & -0.270 & 0.000 & 0.001 & \BAD{worse}\\
+Daga: Amplitude-QSVM & -0.125 & 0.010 & 0.290 & no clear difference\\
+Daga: Hard-Voting (4 kernels) & -0.026 & 0.198 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=inner-CV & -0.075 & 0.058 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=1 & -0.270 & 0.000 & 0.001 & \BAD{worse}\\
+Kiran: HQCAN VQC (4q, 2 layers) & -0.187 & 0.022 & 0.603 & no clear difference\\
+Kiran: RBF-SVM (same 4 PCs, balanced) & -0.023 & 0.198 & 1.000 & no clear difference\\
+Kotha: DiaBeats RF (threshold by inner CV) & -0.016 & 0.601 & 1.000 & no clear difference\\
+\midrule\multicolumn{5}{l}{\textbf{CDC (2,000 rows)}}\\
+Daga: OOF-Stacking (LR meta) & +0.027 & 0.003 & 0.077 & no clear difference\\
+Daga: Angle-QSVM & -0.031 & 0.010 & 0.231 & no clear difference\\
+Daga: ZZ-QSVM & -0.025 & 0.052 & 0.516 & no clear difference\\
+Daga: Amplitude-QSVM & -0.031 & 0.010 & 0.231 & no clear difference\\
+Daga: Hard-Voting (4 kernels) & -0.031 & 0.010 & 0.231 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=inner-CV & -0.010 & 0.383 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=1 & -0.025 & 0.052 & 0.516 & no clear difference\\
+Kiran: HQCAN VQC (4q, 2 layers) & +0.184 & 0.000 & $<$0.0001 & \OK{better}\\
+Kiran: RBF-SVM (same 4 PCs, balanced) & +0.197 & 0.000 & $<$0.0001 & \OK{better}\\
+Kotha: DiaBeats RF (threshold by inner CV) & +0.190 & 0.000 & $<$0.0001 & \OK{better}\\
+\midrule\multicolumn{5}{l}{\textbf{Hospital 130 (2,000 rows)}}\\
+Daga: OOF-Stacking (LR meta) & +0.000 & 1.000 & 1.000 & no clear difference\\
+Daga: Angle-QSVM & +0.000 & 1.000 & 1.000 & no clear difference\\
+Daga: ZZ-QSVM & +0.000 & 1.000 & 1.000 & no clear difference\\
+Daga: Amplitude-QSVM & +0.000 & 1.000 & 1.000 & no clear difference\\
+Daga: Hard-Voting (4 kernels) & +0.000 & 1.000 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=inner-CV & +0.000 & 1.000 & 1.000 & no clear difference\\
+Yadav: ZZ-QSVM (linear) bw=1 & +0.000 & 1.000 & 1.000 & no clear difference\\
+Kiran: HQCAN VQC (4q, 2 layers) & +0.036 & 0.180 & 1.000 & no clear difference\\
+Kiran: RBF-SVM (same 4 PCs, balanced) & +0.032 & 0.085 & 1.000 & no clear difference\\
+Kotha: DiaBeats RF (threshold by inner CV) & +0.038 & 0.059 & 1.000 & no clear difference\\
+
+\bottomrule\end{tabular}

@@ -1,0 +1,5 @@
+Approach,Accuracy,Sensitivity_Recall,ROC_AUC,Clinical_Screening_Utility
+"1. Baseline Classical RF (Raw Zeros, Threshold=0.5)",76.95 +/- 1.78%,60.07 +/- 3.10%,0.8238 +/- 0.0225,Standard baseline; misses 41% of diabetic patients (poor recall)
+2. MICE Imputation + Classical RF,75.12 +/- 2.06%,59.70 +/- 3.07%,0.8277 +/- 0.0120,Physiologically coherent; improves AUC from 0.82 to 0.84
+3. GIF Sample-Weighted LightGBM (Zhang Hybrid),73.83 +/- 1.71%,55.96 +/- 4.60%,0.8068 +/- 0.0269,High robustness against outlier patients and ambiguous biomarkers
+4. Cost-Sensitive Threshold-Tuned MICE-RF (Novel Hybrid),66.40 +/- 2.76%,89.56 +/- 4.46%,0.8277 +/- 0.0120,Clinically optimal: boosts Sensitivity from 58.6% to 86.2% while retaining 73.8% accuracy

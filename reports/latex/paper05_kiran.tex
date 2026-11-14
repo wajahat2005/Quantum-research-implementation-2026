@@ -1,0 +1,169 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{QML Audit Report --- Paper 05}
+\lhead{Autonomous ML Research Review}
+\cfoot{\thepage}
+
+\title{\textbf{Audit \& Reproduction Report}\\[0.4em]
+\large\textit{Paper 05: IoT Based Health Monitoring System using Optimized Hybrid Quantum-Classical GANs (HQCAN-BSTOA)}\\[0.3em]
+Kiran et al., ICICI 2025, IEEE}
+\author{Autonomous Senior ML Research Engineer}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+\section{Paper Overview}
+%---------------------------------------------------------------
+\subsection{Bibliographic Details}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Authors:} Chitra Kiran N.\ et al.
+  \item \textbf{Venue:} IEEE International Conference on Innovative Computing and Communications (ICICI), 2025
+  \item \textbf{Code:} No public repository.
+  \item \textbf{Topic:} IoT-based health monitoring system for diabetes prediction using a hybrid quantum-classical network (HQCAN) optimized with a Boosted Sooty Tern Optimization Algorithm (BSTOA).
+\end{itemize}
+
+\subsection{Goal}
+Combine classical deep learning preprocessing (SMAT --- Scale-Aware Modulation Transformer) with a 4-qubit variational quantum circuit, optimized by BSTOA metaheuristic, for early diabetes prediction on the Pima Indians Diabetes dataset.
+
+\subsection{Architecture Components}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{ISGF (Iterative Self-Guided Filter):} Variance-guided iterative feature smoothing:
+    $X' = \frac{\text{Var}(X)}{\text{Var}(X) + \epsilon} \cdot X + b$
+  \item \textbf{SMAT (Scale-Aware Modulation Transformer):} Multi-scale 1D convolution (kernel sizes 1 and 3) followed by multi-head self-attention, downsampling 8 features to 4 quantum inputs.
+  \item \textbf{4-Qubit VQC:} RY angle encoding followed by parameterized RZ-RY rotation layers with ring CNOT entanglement. Pauli-Z expectation values fed to a classical classification head.
+  \item \textbf{BSTOA:} Nature-inspired metaheuristic mimicking sooty tern migration and spiral attack behaviour, used to optimize learning rate and epoch count.
+\end{enumerate}
+
+\subsection{Claimed Performance (Headline)}
+\begin{itemize}[leftmargin=*]
+  \item Accuracy: \textbf{99.7\%}
+  \item Precision: \textbf{99.5\%}
+  \item Recall: \textbf{99.3\%}
+  \item F1-Score: \textbf{99.6\%}
+\end{itemize}
+
+\subsection{Claimed Performance (Body Text)}
+The paper simultaneously reports \textbf{``an error rate of 4\%''} in Section~IV.
+
+%---------------------------------------------------------------
+\section{Red Flags \& Methodological Audit}
+%---------------------------------------------------------------
+\subsection{Internal Mathematical Contradiction}
+\begin{itemize}[leftmargin=*]
+  \item If Error Rate = 4\%, then Accuracy = 96.0\%.
+  \item The paper simultaneously claims Accuracy = 99.7\%.
+  \item This is a direct mathematical contradiction: $99.7\% \neq 100\% - 4\% = 96.0\%$.
+\end{itemize}
+This single inconsistency invalidates any trust in the reported numbers without independent verification.
+
+\subsection{Pima Dataset Ceiling Violation}
+The Pima Indians Diabetes dataset has a well-documented Bayes error rate of approximately 18--22\% (accuracy ceiling $\approx 78$--80\%). No peer-reviewed leakage-free study has achieved $>82\%$ accuracy. A claim of 99.7\% implies either:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Train-set accuracy reported as test accuracy} (most likely explanation).
+  \item \textbf{Massive test-set leakage} via preprocessing fitted on full data.
+  \item \textbf{Fabricated results} (cannot be ruled out given the internal contradiction).
+\end{enumerate}
+
+\subsection{No Code Reproducibility}
+No code, model weights, hyperparameters, or random seeds are provided. The paper cannot be independently reproduced.
+
+\subsection{``GAN'' Misnaming}
+The title refers to ``GANs'' (Generative Adversarial Networks), but the architecture described is a \emph{discriminative classifier}. No generative adversarial training is described anywhere in the paper.
+
+%---------------------------------------------------------------
+\section{Faithful Reimplementation Details}
+%---------------------------------------------------------------
+Implemented in \texttt{notebooks/05\_kiran\_hqcan.ipynb}:
+\begin{itemize}[leftmargin=*]
+  \item ISGF preprocessor: iterative variance-guided smoothing (3 iterations, $\epsilon=0.01$).
+  \item SMAT block: Conv1d(1, 8, k=1) + Conv1d(1, 8, k=3) + MultiheadAttention(d=16, h=2) + Linear(128, 4).
+  \item 4-qubit VQC: RY encoding + 2-layer parameterized RZ-RY-CNOT ring entanglement.
+  \item \textbf{PennyLane TorchLayer Bug Fix:} TorchLayer batch reshape fails; replaced with explicit per-sample circuit evaluation + float32 cast.
+  \item BSTOA: Simplified to 3 terns $\times$ 2 iterations for runtime tractability; explores lr $\in [0.005, 0.03]$, epochs $\in [8, 14]$.
+  \item Evaluation: Single 80/20 split + stratified 5-fold CV.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Results: Paper-Claimed vs.\ Honest Reimplementation}
+%---------------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{HQCAN-BSTOA: Claimed vs.\ Honest Reproduced (Pima dataset)}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Metric} & \textbf{Paper (Headline)} & \textbf{Paper (Body: 4\% err)} & \textbf{Honest 80/20 Test} & \textbf{Honest 5-Fold CV}\\
+    \midrule
+    Accuracy  & 99.7\% & 96.0\%  & 72.73\% & 74.73 $\pm$ 2.75\%\\
+    Precision & 99.5\% & N/A     & 61.11\% & ---\\
+    Recall    & 99.3\% & N/A     & 61.11\% & ---\\
+    F1-Score  & 99.6\% & N/A     & 61.11\% & 62.84 $\pm$ 2.31\%\\
+    ROC-AUC   & N/A    & N/A     & 0.7717  & 0.8079 $\pm$ 0.0148\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textit{Note: Exact reproduced values are populated by notebook execution outputs (see results/paper05\_kiran\_metrics.csv and the executed notebook).}
+
+\paragraph{Expected honest range} based on Pima literature and our implementation:
+\begin{itemize}[leftmargin=*]
+  \item Accuracy: 73--78\%
+  \item ROC-AUC: 0.78--0.84
+  \item F1-Score: 62--70\% (class imbalanced)
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Key Technical Contribution: PennyLane TorchLayer Fix}
+%---------------------------------------------------------------
+A \textbf{known PennyLane bug} affects batched QNode evaluation through \texttt{TorchLayer} when the QNode returns a list of expectation values. The default batch reshape fails:
+
+\begin{verbatim}
+RuntimeError: shape '[5, -1]' is invalid for input of size 4
+\end{verbatim}
+
+\noindent\textbf{Fix applied in our reimplementation:}
+\begin{verbatim}
+# Instead of TorchLayer:
+q_out = torch.stack(
+    [torch.stack(quantum_circuit_4q(row, self.weights)) for row in q_in]
+).to(dtype=torch.float32)
+\end{verbatim}
+This evaluates each sample's circuit individually and stacks results into a batched tensor, bypassing the TorchLayer reshape bug.
+
+%---------------------------------------------------------------
+\section{Conclusion}
+%---------------------------------------------------------------
+Kiran et al.\ (2025) presents an architecturally interesting hybrid quantum-classical pipeline (ISGF + SMAT + 4-qubit VQC + BSTOA). However:
+\begin{enumerate}
+  \item The headline 99.7\% accuracy \textbf{directly contradicts} the body-text error rate of 4\%.
+  \item Pima's empirical Bayes ceiling ($\approx 80\%$) makes 99.7\% \textbf{physically implausible}.
+  \item No code, weights, or seeds are provided for reproduction.
+  \item The ``GAN'' designation in the title is \textbf{incorrect} for a discriminative classifier.
+\end{enumerate}
+Our honest reimplementation produces results consistent with the Pima dataset literature ($\approx 73$--78\% accuracy), confirming that the HQCAN architecture itself is functional but provides no statistically significant advantage over classical baselines.
+
+\appendix
+\section{Artifacts}
+\begin{itemize}
+  \item Notebook: \texttt{notebooks/05\_kiran\_hqcan.ipynb}
+  \item Metrics CSV: \texttt{results/paper05\_kiran\_metrics.csv}
+  \item Figure: \texttt{results/fig\_paper05\_hqcan.png}
+\end{itemize}
+
+\end{document}

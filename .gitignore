@@ -1,0 +1,66 @@
+﻿# Virtual environments & Python cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Binary & compressed archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+tectonic.zip
+tectonic_bin/
+
+# Heavy local model weights & pickles
+*.pkl
+*.bin
+*.pt
+*.pth
+*.h5
+
+# Local external repos & paper downloads (can be downloaded separately)
+repos/
+papers/
+archive_old/
+checkpoints/
+
+# Raw dataset files (heavy CSVs)
+data/
+*.data
+
+# Local tools & agent states
+.claude/
+.superpowers/
+
+# LaTeX build artifacts (keep PDFs, TeX, PNGs, SVGs)
+latex_report/**/*.aux
+latex_report/**/*.log
+latex_report/**/*.out
+latex_report/**/*.fls
+latex_report/**/*.fdb_latexmk
+latex_report/**/*.nav
+latex_report/**/*.snm
+latex_report/**/*.toc
+latex_report/**/*.xdv
+latex_report/**/*.synctex*
+latex_report/**/*.synctex(busy)
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.toc
+*.xdv
+*.synctex*
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

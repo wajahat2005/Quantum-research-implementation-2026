@@ -1,0 +1,9 @@
+\begin{tikzpicture}\begin{groupplot}[group style={group size=2 by 1,horizontal sep=1.6cm},width=0.46\linewidth,height=5.5cm,xlabel={share of wrong labels (\%)},ylabel={G-mean},ymin=0.5,ymax=0.95,grid=major,tick label style={font=\scriptsize},title style={font=\small\bfseries},legend style={font=\scriptsize,at={(1,1.35)},anchor=south east,legend columns=2}]
+\nextgroupplot[title={Pima (768 rows)}]
+\addplot[color=cc,mark=*,thick] coordinates {(0,0.700) (10,0.689) (20,0.677) (30,0.638) (40,0.556)};
+\addplot[color=cq,mark=*,thick] coordinates {(0,0.709) (10,0.675) (20,0.671) (30,0.659) (40,0.585)};
+\nextgroupplot[title={Sylhet (520 rows)}]
+\addplot[color=cc,mark=*,thick] coordinates {(0,0.884) (10,0.872) (20,0.845) (30,0.771) (40,0.569)};
+\addplot[color=cq,mark=*,thick] coordinates {(0,0.868) (10,0.860) (20,0.814) (30,0.753) (40,0.646)};
+\legend{plain LightGBM,LightGBM + GIF weights}
+\end{groupplot}\end{tikzpicture}

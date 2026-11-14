@@ -1,0 +1,103 @@
+% ==============================================================================
+% test_full.tex: Full 22-Frame Slide Deck Assembly Test
+% ==============================================================================
+\documentclass[aspectratio=169,10pt,t,xcolor={table,dvipsnames}]{beamer}
+\usetheme{Madrid}
+
+% --- Typography and Math Packages ---
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs,array,multirow}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,shapes.geometric,fit}
+
+% --- Custom Professional Palette ---
+\definecolor{qnavy}{HTML}{0B2545}     % Primary Deep Navy
+\definecolor{qteal}{HTML}{134E5E}     % Secondary Slate Teal
+\definecolor{qcrimson}{HTML}{B91C1C}  % Warning / Alert Crimson
+\definecolor{qgreen}{HTML}{15803D}   % Success / Verified Forest Green
+\definecolor{qamber}{HTML}{B45309}   % Caution / Highlight Amber
+\definecolor{qslate}{HTML}{475569}   % Cool Slate Gray
+\definecolor{qlight}{HTML}{F8FAFC}   % Neutral Light Background
+\definecolor{qcard}{HTML}{EEF2F6}    % Card Background
+
+\definecolor{qcrimsonbg}{HTML}{FDF2F2} % Light crimson tint for alerted blocks
+\definecolor{qgreenbg}{HTML}{F0FDF4}   % Light green tint for example blocks
+
+% --- Beamer Styling Overrides ---
+\setbeamercolor{structure}{fg=qnavy}
+\setbeamercolor{palette primary}{bg=qnavy,fg=white}
+\setbeamercolor{palette secondary}{bg=qteal,fg=white}
+\setbeamercolor{palette tertiary}{bg=qnavy,fg=white}
+\setbeamercolor{frametitle}{bg=qnavy,fg=white}
+\setbeamercolor{title}{bg=qnavy,fg=white}
+
+\setbeamercolor{block title}{bg=qnavy,fg=white}
+\setbeamercolor{block body}{bg=qcard,fg=black}
+\setbeamercolor{block title alerted}{bg=qcrimson,fg=white}
+\setbeamercolor{block body alerted}{bg=qcrimsonbg,fg=black}
+\setbeamercolor{block title example}{bg=qgreen,fg=white}
+\setbeamercolor{block body example}{bg=qgreenbg,fg=black}
+
+\setbeamercolor{item}{fg=qteal}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{enumerate items}[default]
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamertemplate{caption}{\raggedright\scriptsize\insertcaption\par}
+
+% --- Custom Header & Footline (Fixed: Zero nullfont warnings) ---
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1.1ex,left,leftskip=1em]{palette primary}%
+    \normalfont\scriptsize\bfseries Clinical QML Multi-Dataset Audit%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1.1ex,center]{palette secondary}%
+    \normalfont\scriptsize\insertshorttitle%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.20\paperwidth,ht=2.5ex,dp=1.1ex,right,rightskip=1em]{palette primary}%
+    \normalfont\scriptsize\bfseries\insertframenumber{} / \inserttotalframenumber%
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+% --- Custom Badges and Highlights ---
+\newcommand{\badgert}[2]{\colorbox{#1}{\textcolor{white}{\textbf{#2}}}}
+\newcommand{\cmark}{\textcolor{qgreen}{\textbf{\checkmark}}}
+\newcommand{\xmark}{\textcolor{qcrimson}{\textbf{\texttimes}}}
+\newcommand{\warnmark}{\textcolor{qamber}{\textbf{\textinterrobang}}}
+\newcommand{\cval}[1]{\textcolor{qnavy}{\textbf{#1}}}
+\newcommand{\bval}[1]{\textcolor{qcrimson}{\textbf{#1}}}
+\newcommand{\gval}[1]{\textcolor{qgreen}{\textbf{#1}}}
+
+% --- Metadata ---
+\title[Do quantum models help diagnose diabetes?]{Do Quantum Models Help Diagnose Diabetes?}
+\subtitle{A Multi-Dataset Cross-Methodology Audit and Leakage Deconstruction}
+\author[Independent Research Audit]{Senior ML Research Engineer \& Independent Audit Team}
+\institute{Repository: \texttt{Adaptive-Quantum-Kernel-Selection}}
+\date{November 2026}
+
+
+
+% --- Helpers ---
+\providecommand{\cbaC}[1]{%
+  \ifdim#1pt<0.55pt\cellcolor{qcrimson!30}\else
+  \ifdim#1pt<0.65pt\cellcolor{qamber!35}\else
+  \ifdim#1pt<0.80pt\cellcolor{qamber!12}\else
+  \ifdim#1pt<0.88pt\cellcolor{qgreen!20}\else\cellcolor{qgreen!38}\fi\fi\fi\fi#1}
+\providecommand{\tlC}[1]{\tikz[baseline=-0.6ex]\fill[#1] (0,0) circle (0.11);}
+
+\graphicspath{{../figures/}{figures/}}
+
+\begin{document}
+
+\input{partA.tex}
+\input{partB.tex}
+\input{partC.tex}
+
+\end{document}

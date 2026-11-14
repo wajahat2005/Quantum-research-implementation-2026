@@ -1,0 +1,44 @@
+% Shared macros and TikZ styles
+\newcommand{\papername}{Daga et al.\ (2026)}
+\newcommand{\wdbc}{WDBC}
+\newcommand{\statusv}{\textsc{Verified}}
+\newcommand{\statuss}{\textsc{Supported under tested protocol}}
+\newcommand{\statusd}{\textsc{Implementation discrepancy}}
+\newcommand{\statusm}{\textsc{Methodological limitation}}
+\newcommand{\statusstat}{\textsc{Statistical limitation}}
+\newcommand{\statusr}{\textsc{Reproducibility issue}}
+\newcommand{\statusp}{\textsc{Partially verified}}
+\newcommand{\statusn}{\textsc{Not reproduced}}
+\newcommand{\statusi}{\textsc{Inconclusive}}
+
+\tikzset{
+  auditnode/.style={
+    rectangle, rounded corners=3pt, draw=auditblue, fill=auditgray,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  qnode/.style={
+    rectangle, rounded corners=3pt, draw=quantumblue, fill=quantumblue!8,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  cnode/.style={
+    rectangle, rounded corners=3pt, draw=classicalteal, fill=classicalteal!8,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  rnode/.style={
+    rectangle, rounded corners=3pt, draw=auditgreen, fill=auditgreen!8,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  dnode/.style={
+    rectangle, rounded corners=3pt, draw=discrepancyred, fill=discrepancyred!6,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  annode/.style={
+    rectangle, rounded corners=3pt, draw=limitationgray, fill=limitationgray!10,
+    align=center, font=\sffamily\small, inner sep=5pt, minimum height=0.72cm
+  },
+  fatarrow/.style={-{Stealth[length=2.2mm]}, thick, auditblue},
+}
+
+\newcommand{\gatebox}[1]{%
+  \tikz[baseline=(g.base)]{\node[draw=auditblue, fill=white, inner sep=2pt, font=\scriptsize\sffamily, rounded corners=1pt] (g) {#1};}%
+}

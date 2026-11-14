@@ -1,0 +1,4 @@
+experiment,test_set_size,accuracy,precision,recall,roc_auc_claimed,roc_auc_upper_bound,notes
+Mathematical_Proof_Kotha_AUC,150,0.8333333333333334,0.7777777777777778,0.7,1.0,0.97,Mathematical contradiction: 25 errors bound AUC <= 0.9700
+Reproduced_80_20_Split,154,0.7597402597402597,0.6808510638297872,0.5925925925925926,1.0,0.8117592592592593,Empirical honest test evaluation on 154 instances
+Repeated_5Fold_CV (50 runs),768,0.7665155759273407,0.6947386078334116,0.5938644304682039,1.0,0.8240331586303286,50 cross-validation runs on full 768 patient cohort

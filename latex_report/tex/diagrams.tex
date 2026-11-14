@@ -1,0 +1,263 @@
+% diagrams.tex - Comprehensive TikZ Visualizations for the WDBC Audit
+\section{System Architecture and Methodological Visualizations}
+\label{sec:system-diagrams}
+
+\subsection{End-to-End Hybrid Quantum-Classical Pipeline}
+\Cref{fig:pipeline} illustrates the complete experimental architecture evaluated on the \wdbc\ benchmark ($N=569$, $D=30$). The pipeline integrates data preprocessing, quantum feature maps, Gram matrix generation, base classifier fitting, and out-of-fold logistic stacking alongside an independent classical comparison branch.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.38cm and 0.45cm,
+  every node/.style={font=\sffamily},
+  scale=0.92, transform shape
+]
+\node[auditnode, text width=3.4cm] (data) {WDBC dataset\\$N=569$, $D=30$};
+\node[auditnode, text width=3.4cm, below=of data] (pre) {Global / fold-local\\preprocessing};
+\node[auditnode, text width=3.4cm, below=of pre] (ss) {StandardScaler};
+\node[auditnode, text width=3.4cm, below=of ss] (pca) {PCA (8 components)\\$92.598\%$ variance};
+\node[auditnode, text width=3.4cm, below=of pca] (mm) {MinMax scaling $[0,\pi]$};
+
+\node[qnode, text width=8.6cm, below=0.55cm of mm] (qk) {%
+\textbf{Quantum Kernel Layer}\\[2pt]
+Angle: 8 qubits (RX/RY) \quad Amplitude: 3 qubits \quad ZZ/IQP: 8 qubits ($K_8$)};
+
+\node[qnode, text width=8.6cm, below=of qk] (gram) {Precomputed Gram Matrices ($K \in \mathbb{R}^{569 \times 569}$)};
+
+\node[qnode, text width=2.45cm, below left=0.55cm and 0.05cm of gram] (ba) {QSVM Angle};
+\node[qnode, text width=2.45cm, right=0.12cm of ba] (bz) {QSVM ZZ};
+\node[qnode, text width=2.45cm, right=0.12cm of bz] (bm) {QSVM Amp.};
+\node[qnode, text width=2.45cm, below=0.22cm of ba] (ka) {QKNN Angle};
+\node[qnode, text width=2.45cm, below=0.22cm of bz] (kz) {QKNN ZZ};
+\node[qnode, text width=2.45cm, below=0.22cm of bm] (km) {QKNN Amp.};
+
+\node[rnode, text width=8.6cm, below=1.55cm of gram] (ens) {Hard Voting / OOF Meta-Features $\to$ Logistic Regression};
+\node[rnode, text width=8.6cm, below=of ens] (outq) {Quantum-Branch \wdbc\ Prediction};
+
+\node[cnode, text width=3.3cm, right=1.15cm of pca] (cdata) {Classical Baseline\\$d=8$ PCA};
+\node[cnode, text width=3.3cm, below=of cdata] (rbf) {RBF-SVM (C=1, scale)};
+\node[cnode, text width=3.3cm, below=of rbf] (rf) {Random Forest};
+\node[cnode, text width=3.3cm, below=of rf] (xgb) {XGBoost};
+\node[cnode, text width=3.3cm, below=of xgb] (cst) {Classical Stacking};
+\node[cnode, text width=3.3cm, below=of cst] (cout) {Classical Predictions};
+
+\node[annode, text width=4.5cm] at ($(outq.east)!0.5!(cout.west)+(0,-1.15)$) {Rigorous Comparative\\Evaluation (McNemar, Holm, Seed)};
+
+\foreach \a/\b in {data/pre,pre/ss,ss/pca,pca/mm,mm/qk,qk/gram,gram/ba,gram/bz,gram/bm,ba/ka,bz/kz,bm/km,ens/outq,cdata/rbf,rbf/rf,rf/xgb,xgb/cst,cst/cout}
+  {\draw[fatarrow] (\a) -- (\b);}
+\draw[fatarrow] (ka.south) -- ++(0,-0.28) -| (ens.north);
+\draw[fatarrow] (kz.south) -- ++(0,-0.12) -- (ens.north);
+\draw[fatarrow] (km.south) -- ++(0,-0.28) -| (ens.north);
+\draw[fatarrow] (outq.south) -- ++(0,-0.35) -| (cout.south);
+\draw[fatarrow] (pca.east) -- (cdata.west);
+\end{tikzpicture}
+\caption{System architecture of the audited \wdbc\ pipeline. Quantum and classical branches undergo paired 10-fold cross-validation on identical splits.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Audit Methodology and Verification Hierarchy}
+\Cref{fig:workflow} depicts the multi-tiered verification hierarchy applied throughout this investigation. Findings are partitioned into empirical reproduction, diagnostic audits, and audit-defined corrected experiments.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.32cm, every node/.style={font=\sffamily\small}]
+\node[auditnode, text width=4.4cm] (p) {\textbf{Paper Claims}\\Daga et al.\ (2026)};
+\node[auditnode, text width=4.4cm, below=of p] (s) {\textbf{Released Source}\\Commit \texttt{23c89d3}};
+\node[qnode, text width=4.4cm, below=of s] (e) {Gram Matrix Extraction\\\& Closed-Form Checks};
+\node[rnode, text width=4.4cm, below=of e] (r) {\textbf{Reproduction Layer}\\Prediction-Level Match};
+\node[rnode, text width=4.4cm, below=of r] (m) {Exact Table 8 Replicability\\Accuracy: $549/569$};
+
+\node[qnode, text width=4.4cm, right=1.6cm of r] (a) {\textbf{Audit Layer}};
+\node[qnode, text width=4.4cm, below=of a] (st) {Statistical Audit (Holm)};
+\node[qnode, text width=4.4cm, below=of st] (f) {Fair Classical Baselines};
+\node[qnode, text width=4.4cm, below=of f] (c) {Calibration (ECE / Brier)};
+\node[qnode, text width=4.4cm, below=of c] (x) {XAI Attribution Algebra};
+\node[qnode, text width=4.4cm, below=of x] (n) {NISQ Noise \& Topology};
+\node[qnode, text width=4.4cm, below=of n] (sd) {Multi-Seed (10 Seeds)};
+
+\node[cnode, text width=4.4cm, right=1.6cm of st] (corr) {\textbf{Corrected Experiments}};
+\node[cnode, text width=4.4cm, below=of corr] (vqc) {VQC Graph Preservation};
+\node[cnode, text width=4.4cm, below=of vqc] (nest) {Exhaustive Nested Selection};
+\node[cnode, text width=4.4cm, below=of nest] (leak) {Fold-Local Preprocessing};
+\node[annode, text width=4.4cm, below=0.6cm of leak] (qc) {Final Consistency Pass};
+\node[annode, text width=4.4cm, below=of qc] (con) {Evidence-Graded Conclusions};
+
+\foreach \a/\b in {p/s,s/e,e/r,r/m,a/st,st/f,f/c,c/x,x/n,n/sd,corr/vqc,vqc/nest,nest/leak,leak/qc,qc/con}
+  {\draw[fatarrow] (\a) -- (\b);}
+\draw[fatarrow] (r.east) -- (a.west);
+\draw[fatarrow] (st.east) -- (corr.west);
+\draw[fatarrow] (sd.south) -- ++(0,-0.35) -| (qc.west);
+\end{tikzpicture}
+\caption{Systematic audit workflow separating reproduction, diagnostic audits, and corrected experiments.}
+\label{fig:workflow}
+\end{figure}
+
+\subsection{Quantum Circuit Topology Mismatch: Clean vs.\ Noisy ZZ Kernels}
+\Cref{fig:circuit-topology} details the architectural disparity uncovered in the ZZ/IQP feature map. The clean baseline executes an all-to-all complete graph $K_8$ comprising 28 interaction pairs (56 CNOT gates). Conversely, the released NISQ simulation silently substitutes a 1D linear chain $P_8$ with only 7 interaction pairs (14 CNOT gates), representing a $75\%$ reduction in two-qubit entangling operations.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  qubit/.style={circle, draw=quantumblue, fill=quantumblue!12, minimum size=0.55cm, font=\scriptsize\bfseries\sffamily},
+  rqubit/.style={circle, draw=discrepancyred, fill=discrepancyred!12, minimum size=0.55cm, font=\scriptsize\bfseries\sffamily},
+  edge_clean/.style={draw=quantumblue!80, thick},
+  edge_noisy/.style={draw=discrepancyred!90, very thick, dashed}
+]
+% Left: Clean K_8
+\node[font=\small\bfseries\sffamily\color{quantumblue}] at (0, 2.5) {Clean ZZ Feature Map: $K_8$ Graph};
+\node[font=\scriptsize\sffamily\color{gray}] at (0, 2.15) {All-to-all connectivity: 28 pairs, 56 CNOTs};
+\foreach \i in {0,1,...,7} {
+  \node[qubit] (q\i) at ({90 - 45*\i}: 1.55cm) {$q_\i$};
+}
+\foreach \i in {0,1,...,6} {
+  \foreach \j in {\the\numexpr\i+1\relax,...,7} {
+    \draw[edge_clean, opacity=0.35] (q\i) -- (q\j);
+  }
+}
+
+% Right: Noisy P_8
+\begin{scope}[xshift=7.5cm]
+\node[font=\small\bfseries\sffamily\color{discrepancyred}] at (0, 2.5) {Released Noisy ZZ Feature Map: $P_8$ Chain};
+\node[font=\scriptsize\sffamily\color{gray}] at (0, 2.15) {Nearest-neighbor only: 7 pairs, 14 CNOTs ($-75\%$)};
+\foreach \i in {0,1,...,7} {
+  \node[rqubit] (p\i) at ({(\i - 3.5)*0.85cm}, 0) {$q_\i$};
+}
+\foreach \i in {0,1,...,6} {
+  \pgfmathtruncatemacro{\next}{\i+1}
+  \draw[edge_noisy] (p\i) -- (p\next);
+}
+\end{scope}
+
+\node[draw=discrepancyred, fill=discrepancyred!5, rounded corners=3pt, text width=13.5cm, align=center, font=\scriptsize\sffamily, below=2.1cm of $(q4)!0.5!(p3)$] {
+  \textbf{Methodological Discrepancy:} The clean and noisy circuits implement fundamentally distinct unitary operators $U(x)$. The paper's reported noise resilience reflects a drastically simplified circuit rather than the clean model's hardware stability.
+};
+\end{tikzpicture}
+\caption{Architectural comparison between clean ($K_8$) and released noisy ($P_8$) ZZ feature maps.}
+\label{fig:circuit-topology}
+\end{figure}
+
+\subsection{VQC Autograd Severance Mechanism}
+\Cref{fig:vqc-severance} traces the exact point of autodiff failure in the author's VQC script (\texttt{vqc\_ablation\_and\_calibration\_github.py}). Python list comprehension strips tensor tracking, collapsing the backpropagation graph and forcing the parameter gradient norm to zero.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.4cm and 0.8cm,
+  every node/.style={font=\sffamily\scriptsize},
+  bnode/.style={rectangle, draw=auditblue, fill=auditgray, rounded corners=2pt, minimum height=0.65cm, align=center},
+  errnode/.style={rectangle, draw=discrepancyred, fill=discrepancyred!10, rounded corners=2pt, minimum height=0.65cm, align=center},
+  fixnode/.style={rectangle, draw=auditgreen, fill=auditgreen!10, rounded corners=2pt, minimum height=0.65cm, align=center},
+  arrow/.style={-Stealth, thick, auditblue}
+]
+% Author path
+\node[bnode, text width=3.4cm] (in) {Input Minibatch $X, Y$\\48 Trainable Parameters $\theta$};
+\node[bnode, below=of in, text width=3.4cm] (qnode) {\texttt{qnn\_circuit(weights, x)}\\Evaluates QNode};
+\node[errnode, below=of qnode, text width=3.4cm] (list) {\textbf{Python List Comprehension}\\ \texttt{[qnn(w,x) for x in X]}\\(Autograd pointers dropped)};
+\node[errnode, below=of list, text width=3.4cm] (sub) {\textbf{List Subtraction}\\ \texttt{(predictions - Y)**2}\\Plain NumPy / Python float};
+\node[errnode, below=of sub, text width=3.4cm] (grad0) {\textbf{Backpropagation Collapses}\\$\nabla_\theta L = \mathbf{0.0}$ ($\ell_2 = 0.0$)\\Nonzero Grads: $0 / 48$};
+
+% Corrected path
+\node[fixnode, right=2.2cm of list, text width=3.8cm] (stack) {\textbf{Tensor Stacking}\\ \texttt{pnp.stack([qnn(...) ...])}\\Autograd computational graph preserved};
+\node[fixnode, below=of stack, text width=3.8cm] (csub) {\textbf{Autograd Tensor MSE}\\ \texttt{pnp.mean((preds - Y)**2)}\\Differentiable tensor cost};
+\node[fixnode, below=of csub, text width=3.8cm] (cgrad) {\textbf{Active Gradient Flow}\\$\|\nabla_\theta L\|_2 = \mathbf{0.101766}$\\Finite-Diff Error: $\mathbf{1.11 \times 10^{-11}}$};
+
+\draw[arrow] (in) -- (qnode);
+\draw[arrow] (qnode) -- (list);
+\draw[arrow] (list) -- (sub);
+\draw[arrow] (sub) -- (grad0);
+
+\draw[arrow, dashed, auditgreen] (qnode.east) -| (stack.north);
+\draw[arrow, auditgreen] (stack) -- (csub);
+\draw[arrow, auditgreen] (csub) -- (cgrad);
+
+\node[draw=discrepancyred, fill=white, font=\bfseries\sffamily\tiny, text=discrepancyred] at ($(list)!0.5!(stack)$) {SEVERED};
+\end{tikzpicture}
+\caption{Mechanistic breakdown of the VQC loss bug causing zero gradient updates in the author's code.}
+\label{fig:vqc-severance}
+\end{figure}
+
+\subsection{Fold-9 Meta-Learner Decision Boundary and Concordance Shift}
+\Cref{fig:fold9-boundary} visualizes the micro-mechanism behind the single-sample difference ($549$ vs.\ $550$) between global and fold-local stacking. Three benign patients (\#288, \#505, \#537) share the discordant vote vector $[1, 1, 1, 1, 0]$ (all base models predict Benign except QSVM ZZ). Due to fold-local weight shifts, their logit crosses the classification threshold.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  scale=1.0, transform shape,
+  every node/.style={font=\sffamily}
+]
+% Axis line
+\draw[-Stealth, thick, gray!80] (-4.5, 0) -- (4.5, 0) node[right, font=\scriptsize] {Net Logit $z = \boldsymbol{\beta}^\top \mathbf{v} + \beta_0$};
+
+% Threshold line
+\draw[dashed, discrepancyred, thick] (0, -1.8) -- (0, 1.8) node[above, font=\scriptsize\bfseries] {Decision Threshold ($z=0, P=0.50$)};
+
+% Left: Malignant prediction zone
+\node[font=\tiny\bfseries, text=auditblue] at (-2.3, 1.4) {$\hat{y} = 0$ (Malignant)};
+\fill[auditblue!8] (-4.2, -1.5) rectangle (-0.05, 1.2);
+
+% Right: Benign prediction zone
+\node[font=\tiny\bfseries, text=auditgreen] at (2.3, 1.4) {$\hat{y} = 1$ (Benign)};
+\fill[auditgreen!8] (0.05, -1.5) rectangle (4.2, 1.2);
+
+% Fixed Global point
+\node[circle, fill=discrepancyred, inner sep=2.5pt] (fg) at (-0.28, 0) {};
+\node[above=0.15cm of fg, font=\scriptsize, align=center, text=discrepancyred] {
+  \textbf{Fixed Global Meta-Learner}\\
+  $z = -0.2808 \implies P(\text{Benign}) = \mathbf{0.4303}$\\
+  $\hat{y} = 0$ \textbf{(False Negative, Malignant)}
+};
+
+% Fold-Local Nested point
+\node[circle, fill=auditgreen, inner sep=2.5pt] (fl) at (0.36, 0) {};
+\node[below=0.2cm of fl, font=\scriptsize, align=center, text=auditgreen] {
+  \textbf{Fold-Local Nested Meta-Learner}\\
+  $z = +0.3566 \implies P(\text{Benign}) = \mathbf{0.5882}$\\
+  $\hat{y} = 1$ \textbf{(True Positive, Benign)}
+};
+
+\draw[-Stealth, bend left=30, thick, auditblue] (fg) to node[above, font=\tiny] {Fold-9 Weight Adjustment} (fl);
+
+\node[draw=auditblue, fill=white, rounded corners=2pt, font=\tiny\sffamily, align=center, anchor=south] at (0, -2.6) {
+  Vote Vector: $[QSVM_{Ang}=1, QKNN_{Ang}=1, QSVM_{Amp}=1, QKNN_{Amp}=1, QSVM_{ZZ}=0]$\\
+  Patients \#288, \#505, \#537 (True Label: 1, Benign) correctly flip from FN to TP under fold-local fitting.
+};
+\end{tikzpicture}
+\caption{Logit decision boundary shift on Fold 9 for patients \#288, \#505, and \#537.}
+\label{fig:fold9-boundary}
+\end{figure}
+
+\subsection{XAI Normalization Cancellation Geometry}
+\Cref{fig:xai-cancel} diagrams the mathematical cancellation in the composite feature attribution formula $\mathrm{comp\_imp}[c] = \mathrm{ev}[c] \cdot \sum_k |\beta_k|$. Because the scalar multiplier is invariant across all original features $c$, it cancels identically upon vector normalization.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.45cm and 0.6cm,
+  every node/.style={font=\sffamily\scriptsize},
+  box/.style={rectangle, draw=auditblue, fill=auditgray, rounded corners=2pt, minimum height=0.65cm, align=center}
+]
+\node[box, text width=3.8cm] (pca) {PCA Eigenvalue Weight\\$\mathrm{ev}[c]$ (Feature $c$)};
+\node[box, right=1.2cm of pca, text width=3.8cm] (meta) {Meta-Learner Weights\\$\sum_{k=1}^4 |\beta_k| = S$ (Constant Scalar)};
+
+\node[box, below=0.7cm of $(pca)!0.5!(meta)$, text width=6.2cm] (raw) {
+  \textbf{Unnormalized Composite Attribution}\\
+  $\mathrm{comp\_imp}[c] = \mathrm{ev}[c] \times S$
+};
+
+\node[box, below=0.7cm of raw, text width=8.5cm, fill=discrepancyred!8, draw=discrepancyred] (norm) {
+  \textbf{L1 Normalization Across Features}\\
+  $\displaystyle \frac{\mathrm{comp\_imp}[c]}{\sum_{j=1}^{30} \mathrm{comp\_imp}[j]} = \frac{\mathrm{ev}[c] \cdot S}{\sum_{j=1}^{30} (\mathrm{ev}[j] \cdot S)} = \frac{\mathrm{ev}[c] \cdot \cancel{S}}{\cancel{S} \cdot \sum_{j=1}^{30} \mathrm{ev}[j]} \equiv \frac{\mathrm{ev}[c]}{\sum_{j=1}^{30} \mathrm{ev}[j]}$
+};
+
+\node[draw=auditgreen, fill=auditgreen!8, rounded corners=2pt, below=0.5cm of norm, text width=8.5cm, align=center] (concl) {
+  \textbf{Conclusion:} Relative feature attributions are 100\% determined by linear PCA loadings.\\Quantum kernel decisions exert exactly zero influence on the normalized feature ranking.
+};
+
+\draw[-Stealth, thick] (pca) -- (raw);
+\draw[-Stealth, thick] (meta) -- (raw);
+\draw[-Stealth, thick] (raw) -- (norm);
+\draw[-Stealth, thick] (norm) -- (concl);
+\end{tikzpicture}
+\caption{Algebraic cancellation proof demonstrating the quantum-invariant nature of the composite XAI metric.}
+\label{fig:xai-cancel}
+\end{figure}

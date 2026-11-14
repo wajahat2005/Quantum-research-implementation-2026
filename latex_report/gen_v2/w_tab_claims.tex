@@ -1,0 +1,19 @@
+\begin{tabular}{llrcccl}
+\toprule Paper & Setting & N & Claimed & Ours [95\%] & Diff & Verdict\\\midrule
+Daga & Pima, stacking accuracy & 768 & 0.766 & 0.759 [0.731, 0.789] & -0.007 & \OK{claim inside our 95\% range}\\
+Daga & Pima, Angle QSVM accuracy & 768 & 0.763 & 0.758 [0.728, 0.789] & -0.005 & \OK{claim inside our 95\% range}\\
+Daga & Pima, ZZ QSVM accuracy & 768 & 0.759 & 0.663 [0.630, 0.697] & -0.096 & \BAD{claim too high to reproduce}\\
+Daga & Pima, Amplitude QSVM accuracy & 768 & 0.763 & 0.638 [0.603, 0.671] & -0.125 & \BAD{claim too high to reproduce}\\
+Daga & Pima, RBF-SVM accuracy & 768 & 0.758 & 0.760 [0.731, 0.790] & +0.002 & \OK{claim inside our 95\% range}\\
+Upama & Pima, SVM accuracy & 154 & 0.720 & 0.721 [0.656, 0.792] & +0.001 & \OK{claim inside our 95\% range}\\
+Upama & Pima, QSVM (our Angle) & 154 & 0.650 & 0.753 [0.682, 0.818] & +0.103 & \WARN{we score higher than claim}\\
+Upama & Pima, QSVM (our ZZ, width 1) & 154 & 0.650 & 0.649 [0.571, 0.727] & -0.001 & \OK{claim inside our 95\% range}\\
+Upama & Pima, RF accuracy & 154 & 0.760 & 0.779 [0.714, 0.838] & +0.019 & \OK{claim inside our 95\% range}\\
+Upama & Sylhet, SVM accuracy & 104 & 0.923 & 0.942 [0.894, 0.981] & +0.019 & \OK{claim inside our 95\% range}\\
+Upama & Sylhet, RF accuracy & 104 & 0.971 & 0.981 [0.952, 1.000] & +0.010 & \OK{claim inside our 95\% range}\\
+Upama & Sylhet, QSVM (our Angle) & 104 & 0.971 & 0.942 [0.894, 0.981] & -0.029 & \OK{claim inside our 95\% range}\\
+Upama & Sylhet, QSVM (our ZZ, width 1) & 104 & 0.971 & 0.942 [0.894, 0.981] & -0.029 & \OK{claim inside our 95\% range}\\
+Kotha & Pima, RF accuracy & 154 & 0.833 & 0.760 [0.695, 0.825] & -0.074 & \BAD{claim too high to reproduce}\\
+Kiran & Pima, VQC accuracy & 154 & 0.997 & 0.675 [0.604, 0.747] & -0.322 & \BAD{claim too high to reproduce}\\
+
+\bottomrule\end{tabular}

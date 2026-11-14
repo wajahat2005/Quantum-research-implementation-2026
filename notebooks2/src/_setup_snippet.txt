@@ -1,0 +1,10 @@
+Standard setup cell used at the top of every notebook (kept here for reference):
+
+import os, sys
+from pathlib import Path
+for p in [Path.cwd(), Path.cwd() / "notebooks2", Path("/content/notebooks2"), *Path("/kaggle/input").glob("*")]:
+    if (p / "nb2_common.py").exists():
+        sys.path.insert(0, str(p)); break
+from nb2_common import *
+sanity_check_kernels()
+DATA = load_all()

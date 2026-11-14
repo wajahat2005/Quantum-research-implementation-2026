@@ -1,0 +1,8 @@
+Model,Dataset,Accuracy,Sensitivity,Specificity,ROC_AUC,F1_Score
+Angle-QSVM,Pima Indians Diabetes,75.52%,54.48%,86.80%,0.8255,60.83%
+Raw-Amplitude-QSVM (Collapsed),Pima Indians Diabetes,65.10%,0.00%,100.00%,0.6755,0.00%
+Repaired-Amplitude-QSVM (Standardized),Pima Indians Diabetes,64.45%,14.18%,91.40%,0.6496,21.78%
+Angle-QKNN (k=5),Pima Indians Diabetes,72.01%,53.36%,82.00%,0.7664,57.09%
+Amplitude-QKNN (k=5),Pima Indians Diabetes,74.61%,61.57%,81.60%,0.7772,62.86%
+Classical RBF-SVM,Pima Indians Diabetes,76.17%,56.34%,86.80%,0.8147,62.27%
+Classical KNN (k=5),Pima Indians Diabetes,72.79%,55.22%,82.20%,0.7769,58.61%

@@ -1,0 +1,47 @@
+# Claude Code ignore rules - Keep context lean & budget-friendly
+
+# Large datasets and raw tables (inspect with python df.head() instead of loading whole files)
+data/**/*.csv
+data/**/*.data
+data/**/*.tsv
+*.csv
+*.tsv
+*.data
+
+# Binary and compressed assets
+tectonic_bin/
+tectonic.zip
+*.zip
+*.tar*
+*.gz
+*.pdf
+
+# Python caches and virtual environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Heavy research artifacts, old archives, and checkpoints
+checkpoints/
+archive_old/
+final_presentation_and_reports_bundle/
+results/
+.superpowers/
+repos/
+
+# LaTeX build artifacts
+latex_report/**/*.aux
+latex_report/**/*.log
+latex_report/**/*.out
+latex_report/**/*.fls
+latex_report/**/*.fdb_latexmk
+
+# Numpy and model weight binaries
+*.npy
+*.npz
+*.pt
+*.pth
+*.pkl
+*.bin

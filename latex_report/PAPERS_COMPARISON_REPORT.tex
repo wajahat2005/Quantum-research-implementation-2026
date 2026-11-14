@@ -1,0 +1,714 @@
+% ============================================================
+%  PAPERS_COMPARISON_REPORT.tex
+%  The seven papers in papers/ compared with the baseline paper
+%  (Daga et al. 2026, Sci. Rep. 16:26840): what each did, how it relates to
+%  the baseline, which printed numbers hold up, and the gaps with fixes.
+%
+%  Every derived number (checks, intervals, G-means, identity counts, the
+%  practice and gap matrices and all three figures) is produced by
+%      reimplementation/papers_consistency_checks.py
+%  which also re-finds each transcribed value in the PDF text of the page it
+%  is quoted from (180/180 found). Baseline re-implementation numbers come
+%  from reimplementation/results/diabetes/.
+%  Compile from latex_report/:  ..\tectonic_bin\tectonic.exe PAPERS_COMPARISON_REPORT.tex
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.1cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,longtable,tabularx,multirow}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+\usepackage{adjustbox}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{3pt}
+\setlist{itemsep=1pt,topsep=2pt}
+\definecolor{ok}{RGB}{20,95,50}
+\definecolor{warn}{RGB}{160,90,0}
+\definecolor{bad}{RGB}{145,25,25}
+\definecolor{okbg}{RGB}{214,240,222}
+\definecolor{warnbg}{RGB}{252,236,200}
+\definecolor{badbg}{RGB}{248,214,214}
+\newcommand{\OK}[1]{\textcolor{ok}{\textbf{#1}}}
+\newcommand{\WARN}[1]{\textcolor{warn}{\textbf{#1}}}
+\newcommand{\BAD}[1]{\textcolor{bad}{\textbf{#1}}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\chk}[1]{\textsf{\small [#1]}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\graphicspath{{../reimplementation/figures/}}
+\newcommand{\tabdir}{../reimplementation/tex/papers/}
+
+\title{The Seven Papers in \texttt{papers/} Compared with the Baseline and Its Re-implementation\\
+\large Daga et al.\ (2026), \emph{Sci.\ Rep.}\ 16:26840: methods, results, checks of the printed numbers, and the gaps with possible fixes}
+\author{Prepared for M.~Wajahat \\ \small Repository \texttt{Adaptive-Quantum-Kernel-Selection} \\ \small Checks: \texttt{reimplementation/papers\_consistency\_checks.py}}
+\date{20 October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent This report compares the baseline paper, Daga, Naole, Parikh, Bommineni and Ramu, \emph{Adaptive quantum kernel selection via leakage-free stacking for clinical diagnostics on NISQ hardware} (\emph{Scientific Reports} 16:26840, 2026), with the seven papers in the repository's \texttt{papers/} folder. Four of them use the same Pima Indians Diabetes data (Upama et al.; Young; Kotha et al.; Chitra Kiran N et al.), one uses the same breast cancer data with quantum kernels (Yadav et al.), one uses the same kernel construction on network-traffic data (Sodar et al.), and one is a classical model for imbalanced clinical voice data (Zhang et al.). Five of the seven are cited by the baseline. Each paper was read in full. Every number quoted here is either printed in a paper (with its page), computed from printed numbers by a script that first re-finds each transcribed value in the PDF text of that page (180 of 180 found), or taken from this repository's re-implementation of the baseline on the Diabetes data. None of the seven papers' models was re-trained. The comparison shows four things. First, wherever a quantum model meets a classical baseline on the same data and protocol, the quantum model does not win by a margin any of the papers can support statistically. Second, the baseline has the most complete evaluation of the eight (10 of 12 practices) but carries its own measurable gaps: global preprocessing (its Diabetes stacking accuracy falls from 0.766 to 0.746 when preprocessing is fitted inside the folds), an untrained variational baseline, a mismatched noise baseline, and untuned classical baselines. Third, the printed numbers of three comparison papers fail simple arithmetic: Chitra Kiran N et al.\ print an F1 score outside the range of their precision and recall and a Cohen's kappa above their accuracy; Kotha et al.\ print an AUC of 1.00 that their own confusion matrix rules out; Young's class counts do not add up and its test folds contain synthetic rows. Fourth, no paper validates on an external cohort or at the level of the person, and none runs a quantum circuit on hardware. A three-way comparison places the re-implementation beside the baseline and the seven papers: it reproduces the baseline exactly under the baseline's own protocol; the recall gain survives leakage-free preprocessing (0.616 vs 0.549) while the accuracy gain does not; across ten seeds a single angle-kernel QSVM is more accurate than the stacking ensemble; and its leakage-free results are the only Pima numbers in the set produced with in-fold preprocessing, several seeds and multiplicity correction. Gaps and possible fixes are listed per paper and for the set as a whole.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+% ============================================================
+\section{How the comparison was made}
+\label{sec:rules}
+% ============================================================
+\paragraph{Sources.} The eight PDFs in Table~\ref{tab:papers} were read in full, including tables and figures. Values that exist only inside images (confusion-matrix plots, a per-fold table rendered as a picture, ROC legends) were read from the rendered page at full resolution and are marked ``read from a figure'' wherever they appear.
+
+\paragraph{Three kinds of statement.} Every number in this report is one of the following.
+\begin{itemize}
+  \item \textbf{Printed}: quoted from a paper, with the page. The checks script re-finds each transcribed value in the PDF text layer of that page and stops if one is missing; all 180 were found.
+  \item \textbf{Computed}: arithmetic on printed numbers, such as an F1 score from precision and recall, a Wilson interval, a G-mean, or an AUC bound from a confusion matrix. The arithmetic is in \code{papers\_consistency\_checks.py} and is listed in full in Appendix~\ref{app:checks}; check identifiers such as \chk{P4-1} point there.
+  \item \textbf{Re-implementation}: numbers from this repository's independent re-implementation of the baseline on the Pima Diabetes data (\path{reimplementation/results/diabetes/}, documented in \path{DIABETES_REIMPLEMENTATION_REPORT_v2.pdf}).
+\end{itemize}
+
+\paragraph{What was not done.} The code of the seven comparison papers was not run, and none of their models was re-trained. Statements about them therefore concern what they report and whether those reports are internally consistent, not whether their results reproduce.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{The baseline (B), the seven comparison papers (P1--P7) and the re-implementation of the baseline (R). ``Cited by B'' gives the reference number in the baseline's bibliography.}
+\label{tab:papers}
+\begin{tabularx}{\textwidth}{c L{3.3cm} L{3.1cm} Y L{2.6cm} c}
+\toprule
+Tag & Authors & Venue & Data & Quantum part & Cited by B \\
+\midrule
+B & Daga, Naole, Parikh, Bommineni, Ramu & \emph{Sci.\ Rep.} 16:26840 (2026) & Parkinson's voice (195), WDBC breast cancer (569), Pima diabetes (768) & Three fidelity kernels, simulated & -- \\
+P1 & Upama, Haque, Alam, Ahamed & \emph{Mach.\ Learn.\ Appl.} 24:100900 (2026) & Early-stage diabetes questionnaire (520); Pima (768) & QSVM, simulated; ``QRF'' is classical & no \\
+P2 & Young II & arXiv:2509.12259 (2025) & Pima plus 2,000 synthetic rows (2,768) & Quantum-inspired, classical & ref.\ 15 \\
+P3 & Kotha et al.\ (DiaBeats) & IEEE I3CTCON (2026) & Pima (768) & none & no \\
+P4 & Chitra Kiran N, Kansal, Muthulingam, Manju, Verma, Soudagar & IEEE ICICI (2025), pp.\ 1708--1713 & Pima (768); IoT data claimed but not used & ``4 qubits'', circuit not described & ref.\ 22 \\
+P5 & Yadav, Sheoran, Sheoran & \emph{PeerJ Comput.\ Sci.} 12:e3600 (2026) & WDBC (569) & Fidelity kernels (Z, ZZ, Pauli) and a QNN, simulated & ref.\ 13 \\
+P6 & Sodar, Murthy, Jonnalagadda, Cherukuri & \emph{EPJ Quantum Technol.} 13:17 (2026) & Encrypted traffic: ISCX-URL2016, ISCXIDS2012 & QSVM, QKNN, quantum encodings, simulated & ref.\ 19 \\
+P7 & Zhang, Cheng, Xue, Wu, Zhang (DeSCN-GIF) & \emph{IEEE Trans.\ Fuzzy Syst.} 33(9):2937 (2025) & Five syllable voice datasets for depression, 1,071 samples each & none & ref.\ 8 \\
+\midrule
+R & This repository's re-implementation of B & this repository (2026) & Pima (768) only & B's three kernels, simulated & -- \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{Findings at a glance}
+\label{sec:glance}
+% ============================================================
+\begin{table}[H]
+\centering\footnotesize
+\caption{Main findings. The last column names the section with the evidence.}
+\label{tab:glance}
+\begin{tabularx}{\textwidth}{c Y c}
+\toprule
+\# & Finding & Where \\
+\midrule
+1 & \textbf{No quantum model wins with support.} Where a quantum model meets a classical baseline on the same data and split, the gap is either not significant or favours the classical model: B is at parity on Diabetes and breast cancer; P1's QSVM scores 0.65 against 0.76 for random forest on Pima; P5's best hybrid (0.956) is below its own SVM and logistic regression (0.9737); P6's pure quantum models are below the classical model in 8 of 8 comparisons. & \S\ref{sec:pima}, \S\ref{sec:wdbc} \\
+2 & \textbf{The baseline is the most complete evaluation} (10 of 12 practices; the next best, P7, has 7.5). It is the only paper with bootstrap intervals, McNemar tests, ablation, calibration, a noise study and public code together. & \S\ref{sec:practice} \\
+3 & \textbf{The baseline still has measurable gaps.} Fitting preprocessing inside the folds lowers its Diabetes stacking accuracy from 0.766 to 0.746 while the RBF-SVM stays at 0.759; its VQC baseline is untrained (zero gradient); its noise table compares different circuits at 0\,\% and 10\,\%; its classical baselines are untuned, and on the balanced G-mean metric its own classical stacker (0.726) equals the quantum stacker (0.724). & \S\ref{sec:base}, \S\ref{sec:basegaps} \\
+4 & \BAD{P4's headline numbers are arithmetically impossible}: F1 99.6\,\% with precision 99.5\,\% and recall 99.3\,\%; kappa 99.7\,\% above an accuracy of 99.5\,\%; four different accuracies for one model. The baseline cites its 99.7\,\% without flagging this. & \S\ref{sec:p4} \\
+5 & \BAD{P3's AUC of 1.00 is ruled out by its own confusion matrix} (15 false negatives and 10 false positives cap the AUC at 0.970). Its only performance numbers are in figures; the computed accuracy is 0.833 on 150 records. & \S\ref{sec:p3} \\
+6 & \BAD{P2's evaluation mixes synthetic and real records}: 2,000 synthetic rows are created before the folds, so every test fold contains them; the stated class count (1,949 positives) does not equal 268\,+\,2,000; text and figure disagree on every per-fold range; against its own random forest the F1 gain is 0.001. & \S\ref{sec:p2} \\
+7 & \WARN{P5 compares two feature maps, not three}: ``Pauli'' reproduces ZZ in 15/15 rows and ``PauliZ'' reproduces Z in 15/15 rows. Its ``t-test values'' are timings by its own pseudocode, and its recall is the benign-class recall. & \S\ref{sec:p5} \\
+8 & \WARN{Breast cancer ``recall'' means benign recall in both B and P5.} Only that reading reproduces B's printed accuracy; cancer detection is B's ``specificity'' column (0.948 for the RBF-SVM). & \S\ref{sec:wdbc} \\
+9 & \textbf{Shared gaps.} None of the eight papers validates on an external cohort or at the level of the person, and none runs a quantum circuit on hardware. Only B and P7 test differences between models. & \S\ref{sec:gaps} \\
+10 & \textbf{What transfers.} P7's repeated splits, tuned baselines and rank tests, P5's untouched hold-out, P2's probability-level meta-features and P6's hybrid encoding baseline would each strengthen the baseline; the baseline's cross-validation, intervals, McNemar tests and open code would fix the main weakness of P1, P3, P4 and P6. & \S\ref{sec:lessons} \\
+11 & \textbf{Three-way: paper, re-implementation, other papers.} The re-implementation reproduces the baseline exactly, keeps its recall gain under leakage-free preprocessing (0.616 vs 0.549) but not its accuracy gain (0.746 vs 0.759), finds a single angle-kernel QSVM more accurate than stacking over ten seeds (0.769 vs 0.762), and shows the VQC stays below the majority rate even when its gradient is fixed (0.645 vs 0.651). Its leakage-free numbers are the only Pima results in the set with in-fold preprocessing, several seeds and multiplicity correction. & \S\ref{sec:threeway} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{The baseline: Daga et al.\ (2026)}
+\label{sec:base}
+% ============================================================
+\subsection{What the paper does}
+The baseline routes each dataset through a fixed preprocessing chain (z-score, PCA to eight components, rescaling to $[0,\pi]$), all fitted on the full dataset before cross-validation (p.~12). Three fidelity kernels are computed as Gram matrices: an angle encoding on eight qubits, a ZZ (IQP-type) feature map on eight qubits, and an amplitude encoding on three qubits. Each kernel feeds a quantum SVM (precomputed-kernel SVC, $C=1$) and a quantum KNN ($k=5$, distance $1-K$). A logistic-regression meta-learner with balanced class weights is trained on out-of-fold binary predictions of four base models (QSVM-Amplitude, QKNN-Amplitude, QSVM-ZZ, QKNN-Angle), with 5-fold inner and 10-fold outer stratified cross-validation and seed 42. A three-model hard-voting ensemble, a classical RBF-SVM and a variational quantum classifier (VQC) serve as comparisons. Results are reported with 1,000-resample bootstrap intervals and McNemar tests, followed by ablation, ROC and PR curves, calibration, SHAP, LIME and permutation importance, PCA backtracking to raw features, a depolarizing-noise study, and classical XGBoost, random forest and SVM+KNN stacking baselines. Code is on GitHub (p.~30).
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Baseline datasets (Table 4, p.~11) and headline results (abstract, p.~1). All values printed.}
+\label{tab:base}
+\begin{tabularx}{\textwidth}{l c l Y}
+\toprule
+Dataset & $N$ & Classes & Headline result \\
+\midrule
+UCI Parkinson's & 195 & 48 healthy / 147 PD & Specificity 0.585 (RBF-SVM) to 0.813 (stacking), $p<0.001$; recall above 0.95 \\
+WDBC breast cancer & 569 & 212 malignant / 357 benign & Stacking matches RBF-SVM (accuracy 0.964 vs 0.970), all $p>0.05$ \\
+Pima diabetes & 768 & 500 non-diabetic / 268 diabetic & Recall 0.553 (RBF-SVM) to 0.621 (stacking), $p=0.004$; accuracy 0.758 vs 0.766 \\
+All three & & & VQC fails everywhere (ROC-AUC 0.51 to 0.57) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What the re-implementation of the baseline established}
+The repository's re-implementation reran the whole baseline pipeline on the Diabetes data. Table~\ref{tab:reimpl} summarises the parts that matter for this comparison.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Baseline claims on Diabetes against the re-implementation (result files in the repository's \code{reimplementation} folder).}
+\label{tab:reimpl}
+\begin{tabularx}{\textwidth}{L{4.0cm} Y L{2.4cm}}
+\toprule
+Item & Re-implementation result & Verdict \\
+\midrule
+Bootstrap table (Table 9) & All 108 values (nine models, four metrics, mean and both bounds) identical to the printed digits & \OK{exact} \\
+Ablation, McNemar, calibration, coefficients, SHAP, XAI ranks, backtracking & Identical to the printed digits & \OK{exact} \\
+Recall gain 0.553 to 0.621 & Stacking has the higher recall in 10 of 10 seeds. After Holm correction over 32 comparisons: $p=0.035$ with $10^4$ resamples, $p=0.112$ with the paper's 1,000 resamples, $p=0.204$ parametric & \WARN{robust direction, fragile significance} \\
+Accuracy gain 0.758 to 0.766 & Stacking ahead in 6 of 10 seeds, mean gap $+0.001$; McNemar in the paper itself $p=0.556$ & \WARN{parity} \\
+Preprocessing fitted inside the folds & Stacking 0.766 to 0.746 (strictly nested), RBF-SVM 0.758 to 0.759 & \BAD{gain disappears} \\
+Tuned classical baselines & Tuned RBF-SVM 0.760, tuned XGBoost 0.759; McNemar against stacking $p=0.72$ and $0.69$ & \WARN{parity} \\
+VQC & The released loss builds a Python list of circuit outputs, which detaches automatic differentiation: the gradient is exactly zero, so the reported VQC is an untrained random circuit & \BAD{baseline invalid} \\
+Noise study (Table 19) & Reproduces exactly with the released circuits, but the 0\,\% row uses a simplified chain kernel, not the all-to-all benchmark kernel; with the benchmark kernel at 0\,\% the 10\,\% degradation is $+0.117$ (ZZ-SVM) and $+0.167$ (stacking) instead of $-0.017$ and $+0.083$ & \BAD{wrong reference} \\
+Kernels & Angle kernel $=\prod_i\cos^2\!\big((x_i-x'_i)/2\big)$ and amplitude kernel $=$ squared cosine similarity, both matched to the circuits to $10^{-15}$ & closed-form classical \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{How the baseline describes the papers it cites}
+\label{sec:cited}
+Five of the seven papers are cited by the baseline. Table~\ref{tab:cited} compares the baseline's description with what each full paper shows.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{The baseline's account of the five papers it cites (pp.~2--5), checked against the full papers.}
+\label{tab:cited}
+\begin{tabularx}{\textwidth}{c L{4.2cm} Y L{3.3cm}}
+\toprule
+Ref. & Baseline's description & What the full paper shows & Consequence \\
+\midrule
+8 (P7) & Deep ensemble SCN with graph intuitionistic fuzzy scoring for class imbalance in depression screening; ``operates in classical feature spaces''. & Correct. P7 also uses 100 repeated splits, grid-searched baselines and Friedman--Nemenyi tests, which the baseline does not adopt. & Accurate; a model for stronger statistics. \\
+13 (P5) & Hybrid QSVM$\to$QNN with Z, ZZ and Pauli kernels; ``over 95\,\% accuracy''; the QNN stage causes instability. & 95.61\,\% is correct, but P5's own classical SVM and logistic regression reach 97.37\,\% (Table 14); ``Pauli'' duplicates ZZ or Z in every row. & Accurate but incomplete: the classical result that beats it is omitted. \\
+15 (P2) & Classical, quantum-inspired stack; 2,000 GMM synthetic samples; OOF F1 0.8933; ``no true Hilbert space''. & Correct. Not mentioned: the synthetic rows enter the test folds, the class counts do not add up, and two of the baseline's own three kernels are closed-form classical functions too. & The ``true Hilbert space'' contrast is weaker than stated. \\
+19 (P6) & QSVM and QKNN with angle and amplitude encodings ``demonstrated competitive performance''; no single encoding is optimal. & The encoding finding is correct. The pure QSVM and QKNN, the models the baseline builds on, are below the classical model in all 8 comparisons; only the hybrids are competitive. & ``Competitive'' applies to a design the baseline does not use. \\
+22 (P4) & 99.7\,\% accuracy; concerns about overfitting, calibration and interpretability. & The 99.7\,\% is one of four accuracies the paper prints for the same model, next to an impossible F1 and kappa (\S\ref{sec:p4}). & The number should not be cited as a result. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{The seven papers, one by one}
+\label{sec:papers}
+% ============================================================
+Each subsection gives what the paper did, what it reports, the checks on its printed numbers, how it relates to the baseline, and its gaps with possible fixes. Gap codes A--K are defined in Section~\ref{sec:gaps}.
+
+% ------------------------------------------------------------
+\subsection{P1: Upama et al.\ (2026), causal inference and quantum ML for early diabetes}
+\label{sec:p1}
+\paragraph{What they did.} The primary data are the Early Stage Diabetes Risk Prediction questionnaire from Sylhet Diabetes Hospital (520 records, 320 diabetic and 200 not, 16 features that are mostly yes/no symptoms; p.~3). A causal analysis with linear double machine learning (\code{econml} LinearDML) estimates each feature's average causal contribution, and 10 features are kept; $t$-tests with Cohen's $d$ are used to confirm the ranking. Four classifiers follow: a linear-kernel SVM, a QSVM with Qiskit's ZZFeatureMap on a statevector simulator, a 100-tree random forest, and a ``Quantum Random Forest'' that is ``a regular RF model with capped tree depth'' (p.~7). Parameters are chosen with 10-fold cross-validation and ``tuned as needed at each stage of execution'' (pp.~5, 7). The same pipeline is then applied to Pima, where the causal analysis drops blood pressure and seven features remain.
+
+\paragraph{What they report.} On the 104-record test set (Fig.~8, read from a figure): SVM 0.9231, random forest 0.9712, QSVM 0.9712, ``QRF'' 0.9615; ROC-AUC 0.93, 0.97, 0.97, 0.96 (Fig.~9). On Pima (p.~9 and Fig.~13): SVM 72\,\%, QSVM 65\,\%, random forest 76\,\%, ``QRF'' 72\,\%. No intervals or tests between models.
+
+\paragraph{Checks.} The Fig.~8 accuracies correspond to whole numbers of correct predictions out of 104 \chk{P1-1}. The QSVM and SVM differ by 5 test cases (101 vs 96); even if every disagreement favoured the QSVM, an exact McNemar test would give $p=0.0625$ \chk{P1-3}. The ``Quantum Random Forest'' contains no quantum computation \chk{P1-2}.
+
+\paragraph{Relation to the baseline.} P1 is not cited by the baseline. Both run a QSVM with a ZZ-type map on the same 768 Pima records, and they reach opposite pictures: the baseline's QSVM-ZZ scores 0.759, level with its RBF-SVM, while P1's QSVM scores 65\,\%, 11 points below its random forest. The setups differ in features (seven raw vs eight PCA components rescaled to $[0,\pi]$), library (Qiskit vs PennyLane), protocol (one split vs 10-fold) and the size of the Pima test set, which P1 does not give, so the two numbers cannot be ranked. P1's causal feature analysis on raw clinical variables is something the baseline lacks; the baseline explains PCA components and maps them back through loadings.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P1 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+A, B & One test split of 104; Pima test size not stated; no intervals or tests. & Repeated stratified cross-validation; Wilson or bootstrap intervals; McNemar tests on paired predictions. \\
+D & Causal feature selection is run on the whole dataset before the split (p.~3); tuning ``at each stage''. & Run the causal selection inside each training fold (nested), or fix the features from external knowledge. \\
+G & Split ratio, seeds, QSVM feature-map repetitions and the depth cap of ``QRF'' are not stated. & Report every setting needed to rerun the experiment. \\
+H & ``QRF'' is a classical random forest; the QSVM is simulated only. & Rename it or implement a quantum component; report what the simulator assumes. \\
+J & No code; the data statement says only ``Used public dataset''. & Release code and split indices. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P2: Young (2025), QISICGM quantum-inspired stacked ensemble}
+\label{sec:p2}
+\paragraph{What they did.} The Pima data (768 records) are augmented with 2,000 synthetic rows from a Gaussian mixture model (five components, full covariance) ``fitted to the minority class'', giving 2,768 rows with 1,949 positives (pp.~1, 4). Zeros are replaced with medians, three interaction features are added (11 in total), and a robust scaler is applied. Three ``quantum-inspired'' components follow, all classical: a trigonometric phase feature map, a self-improving $k$-nearest-neighbour concept graph built on autoencoder embeddings, and neighbourhood sequence modelling. Five base learners (random forest, extra trees, a transformer, a 1-D CNN, a feed-forward network) are calibrated with isotonic regression, and a logistic-regression meta-learner is trained on their out-of-fold outputs in 5-fold cross-validation (p.~6). Code is on GitHub.
+
+\paragraph{What they report.} Out-of-fold F1 0.8933 and AUC 0.8699, Brier score 0.12, inference at 8.5 rows per second; random forest (F1 0.821, AUC 0.803) and XGBoost (F1 0.854, AUC 0.839) are quoted from other papers as baselines (p.~7).
+
+\paragraph{Checks.}
+\begin{itemize}
+  \item The class counts do not add up: 268 real positives plus 2,000 synthetic positives is 2,268, not 1,949 \chk{P2-1}.
+  \item On a set that is 70\,\% positive, an ``always diabetic'' rule already scores F1 $=0.826$, so the headline F1 of 0.893 is a weak summary \chk{P2-2}.
+  \item The text and the per-fold table (Fig.~1, read from a figure) disagree: the text gives a meta-learner F1 range of 0.881 to 0.902 and AUC 0.852 to 0.885; the figure shows 0.8849 to 0.9123 and 0.8281 to 0.8989. None of the five base-learner F1 values in the text matches the figure \chk{P2-3, P2-4}.
+  \item The paper's own random forest on the same folds reaches F1 0.8950 and AUC 0.8046 (Fig.~1); the meta-learner's F1 is 0.8962. The F1 gain over its own random forest is 0.001; the 0.07 gain in the text comes from other papers' numbers \chk{P2-5}.
+  \item Algorithm 1 imputes and engineers features on the augmented set and then draws the folds, so synthetic rows sit in every test fold \chk{P2-6}.
+\end{itemize}
+
+\paragraph{Relation to the baseline.} P2 is architecturally the closest paper to the baseline: both stack heterogeneous base models with a logistic-regression meta-learner trained on out-of-fold predictions. P2 feeds calibrated probabilities and logits to the meta-learner, which the baseline lists as future work (continuous confidences instead of binary votes, p.~29). The baseline dismisses P2 because it lacks ``true Hilbert space'' representations, but two of the baseline's own three kernels have exact classical closed forms (Table~\ref{tab:reimpl}), so the difference is smaller than the baseline suggests. The two papers' numbers are not comparable: P2 reports F1 on augmented data, the baseline reports accuracy, recall and specificity on the 768 real records.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P2 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+D & Synthetic rows generated before cross-validation appear in the test folds. & Generate synthetic rows inside each training fold only, or use class weights; evaluate on real records only. \\
+E & Class counts (1,949 vs 2,268) and per-fold ranges disagree between text and figure. & Reconcile the counts; regenerate text from the result files. \\
+F & Headline baselines are copied from other papers on other data. & Compare against the paper's own random forest and XGBoost on the same folds. \\
+B, I & Only fold standard deviations; F1 of the majority class as headline. & Report balanced accuracy, MCC, G-mean and PR-AUC with intervals; paired tests against own baselines. \\
+C, H & No external validation; ``quantum-inspired'' components are classical (the paper says so). & External cohort; keep the classical framing. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P3: Kotha et al.\ (2026), DiaBeats web system}
+\label{sec:p3}
+\paragraph{What they did.} A random forest is trained on Pima after replacing zeros in glucose, insulin, BMI, skin thickness and blood pressure with the median of the non-zero values and standardising all features (p.~3). The model is served through a Flask backend and a Streamlit interface with adjustable thresholds and HTTPS. The paper has no quantum component and is not cited by the baseline; it cites P2.
+
+\paragraph{What they report.} The text gives no numerical results. The figures show a ROC curve with legend ``Random Forest (AUC = 1.00)'' (Fig.~3), a confusion matrix with TN 90, FP 10, FN 15, TP 35 (Fig.~4) and feature importances with glucose 0.300, BMI 0.200 and age 0.150 at the top (Fig.~5), all read from figures.
+
+\paragraph{Checks.} The confusion matrix gives $n=150$, accuracy 0.833 (Wilson 95\,\% interval 0.766 to 0.884), precision 0.778, recall 0.700 and specificity 0.900 \chk{P3-1, P3-5}. With 15 false negatives and 10 false positives, at least 150 of the 5,000 positive--negative pairs are ranked the wrong way round, so the AUC is at most 0.970; the plotted curve sits at a true-positive rate of 1 for every false-positive rate, above the matrix's own operating point \chk{P3-2}. The text says results are ``summarized in Table~I'', which is the attribute table \chk{P3-3}, and ranks insulin among the top predictors while Fig.~5 puts it last \chk{P3-4}.
+
+\paragraph{Relation to the baseline.} Same data, classical model, deployment focus. The computed accuracy (0.833) is higher than any of the baseline's cross-validated Pima results, but it comes from one undescribed split of 150 records, and its interval overlaps the baseline's (Fig.~\ref{fig:pima}). P3 shows that the baseline's numbers are not unusually low for Pima under a stricter protocol, rather than that a random forest is better.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P3 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+A, B & One test set, size known only from the confusion matrix; no intervals. & Cross-validation with intervals; report the split. \\
+E & AUC 1.00 is incompatible with the confusion matrix; a ``Table~I'' of results that does not exist; text and figure disagree on insulin. & Recompute the ROC from the stored test predictions; put the metrics in a table. \\
+F & No baseline model. & Logistic regression and gradient boosting on the same splits. \\
+G, D & Random-forest settings, threshold and whether imputation and scaling were fitted on training data only are not stated. & State them; fit preprocessing inside the training folds. \\
+J, C & No code for a system presented as deployable; no external validation. & Release code; validate on another population before deployment claims. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P4: Chitra Kiran N et al.\ (2025), HQCAN-BSTOA IoT monitoring}
+\label{sec:p4}
+\paragraph{What they did.} The paper describes an IoT pipeline: wearable-sensor data are cleaned with iterative self-guided filtering, features are extracted with a scale-aware modulation transformer, and a ``hybrid quantum--classical adversarial network'' (HQCAN, 4 qubits, 200 epochs) classifies them, with hyperparameters tuned by a boosted sooty tern optimiser (pp.~2--4). The evaluation uses only Pima with an 80/20 split (p.~3); no IoT data appear in the experiments. The quantum layer's circuit, encoding and measurement are not described, and the reference given for the HQCAN design (ref.~13) is a power-electronics paper on a bridgeless LUO converter (p.~6).
+
+\paragraph{What they report.} Accuracy 99.7\,\% (abstract), 99.5\,\% with precision 99.5\,\%, F1 99.6\,\%, recall 99.3\,\%, specificity 99.5\,\% and an ``error rate of 4\,\%'' (p.~4), training 99.6\,\% and testing 98.9\,\% (Fig.~3), and 99.8\,\% (conclusion); RMSE 4\,\%, MAE 1.04\,\%, kappa 99.7\,\% (Table~IV).
+
+\paragraph{Checks.}
+\begin{itemize}
+  \item An F1 score is the harmonic mean of precision and recall and must lie between them. With precision 0.995 and recall 0.993 it equals 0.994, not 0.996 \chk{P4-1}.
+  \item Cohen's kappa cannot exceed accuracy when accuracy is below 1. Kappa 0.997 is impossible at the printed accuracies of 0.989 and 0.995 for any class mix, and at 0.997 and 0.998 for the Pima class mix, where the largest attainable kappa is 0.993 and 0.996 \chk{P4-2}. The baselines' kappa values (99.0--99.4\,\%) sit next to accuracy bars below 95\,\% in Fig.~2.
+  \item An error rate of 4\,\% contradicts an accuracy of 99.5\,\% if error rate means $1-\text{accuracy}$ \chk{P4-3}; four different accuracies are printed for one model and one split \chk{P4-4}.
+  \item The dataset is described as ``768 female patients with diabetes, who are up to 21 years old''; the paper's own Table~III lists 268 with diabetes and 500 without, and Pima participants are 21 or older \chk{P4-5, P4-6}.
+\end{itemize}
+
+\paragraph{Relation to the baseline.} The baseline cites the 99.7\,\% and questions the model's complexity, calibration and interpretability (p.~5), but treats the number as a result. The checks above show it cannot be one. Nothing in P4's method can be compared with the baseline, because the quantum layer is not specified.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P4 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+E & Impossible F1 and kappa; four accuracies; error rate inconsistent; dataset misdescribed. & Report one confusion matrix from one defined test set and derive every metric from it. \\
+G, K & Quantum circuit, encoding, measurement and simulator not described; the cited design source is unrelated. & Specify the circuit and its role inside the GAN; cite the actual source. \\
+A, B & One 80/20 split; no intervals. & Cross-validation with intervals and tests. \\
+F & Baseline numbers' source and protocol not stated. & Rerun baselines on the same split. \\
+C, I, J & IoT claim not tested; imbalance not discussed; no code. & Evaluate on real sensor data; class weights or balanced metrics; release code. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P5: Yadav, Sheoran and Sheoran (2026), hybrid QSVM$\to$QNN for breast cancer}
+\label{sec:p5}
+\paragraph{What they did.} On WDBC (569 records), seven features are selected (``mutual information'' in Table~5, ``PCA'' on p.~19), standardised, and split 80/20 with stratification (seed 42), leaving a 114-record hold-out (p.~20). A QSVM uses Qiskit's fidelity quantum kernel with three feature maps (Z, ZZ, Pauli; seven qubits, one repetition, full entanglement) and an SVC with $C=1$. In the hybrid, the QSVM decision margin plus one PCA component form a two-dimensional input to a two-qubit QNN (RealAmplitudes, COBYLA with 80 iterations). Everything runs on the Qiskit Aer statevector simulator on an Intel i5 with 16\,GB RAM, with 5-fold cross-validation repeated with seeds 42--44 and a final evaluation on the hold-out. Classical baselines are tuned with nested cross-validation (5 outer, 3 inner folds). Code is on Zenodo.
+
+\paragraph{What they report.} Hold-out accuracy: QSVM Z 0.947, ZZ and Pauli 0.860 (Table~8); QNN 0.605, 0.491, 0.544 (Table~10); hybrid Z 0.947--0.956, PauliZ 0.947--0.956, ZZ 0.833--0.860 (Table~12). Classical nested CV (Table~14): SVM and logistic regression 97.37\,\%, KNN 96.48\,\%, random forest 95.61\,\%, decision tree 91.04\,\%. The paper states that the classical models are more accurate on this dataset (p.~28).
+
+\paragraph{Checks.}
+\begin{itemize}
+  \item \textbf{Two maps, not three.} Parsing the per-fold tables from the PDF: in the standalone QSVM, every one of the 15 ``Pauli'' rows equals the ZZ row in accuracy, precision, recall and F1, and the hold-out results are identical. In the hybrid, all 15 ``PauliZ'' rows equal the Z rows, and so do the three hold-out rows. The control comparisons (Z vs ZZ, and ZZ vs Pauli in the QNN) share no identical rows (Table~\ref{tab:yadav}) \chk{P5-1}. This matches Qiskit's definitions: a Pauli feature map with only Z terms is the Z map, and its default Z+ZZ terms are the ZZ map.
+  \item \textbf{Timings read as statistics.} The pseudocode defines \code{t\_test} as ``SVM kernel time'' and \code{t\_fq} as ``QNN forward pass time'' (p.~9); the results call them ``t-test values 203--296'' that ``reflect high confidence'' and ``fidelity-based quantum scores'' (p.~26). No test statistic or $p$-value appears anywhere, although the abstract promises paired $t$ and $F$ tests \chk{P5-2}.
+  \item The same kernel-time column is in seconds on p.~10 (``400--800\,s per fold'') and in milliseconds on p.~26 \chk{P5-3}. The feature selection is stated two ways \chk{P5-4}. The pseudocode applies imbalance handling (``SMOTE or undersampling''), standardisation and feature selection before the split and names Adam or SPSA as the optimizer, while Table~5 says COBYLA and a scaler fitted on training data only \chk{P5-5}. Naive Bayes is 93.33\,\% in the text and 93.93 in Table~13 \chk{P5-6}.
+  \item \textbf{Benign recall.} Table~5 codes benign as 0 and malignant as 1, but the hold-out recall 0.972222 is 70/72, and a stratified 20\,\% split of 357 benign and 212 malignant records has 71--72 benign and 42--43 malignant. Class 1 is therefore benign (the scikit-learn coding), and the reported recall is benign recall. Malignant recall is 38/42 $=0.905$ \chk{P5-8}.
+  \item The hybrid's best hold-out result (109/114) differs from the standalone QSVM (108/114) by one record; no test can call that a difference \chk{P5-7, P5-9}.
+\end{itemize}
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Row-by-row identity of the feature maps in P5, parsed from the PDF tables (pp.~22--26).}
+\label{tab:yadav}
+\input{\tabdir tab_yadav_identity.tex}
+\end{table}
+
+\paragraph{Relation to the baseline.} P5 is the only comparison paper that runs quantum kernels on one of the baseline's datasets, so it is the most direct comparison (Section~\ref{sec:wdbc}). The two papers agree on three points: classical models are at least as accurate as the quantum kernels on WDBC; the entangling ZZ map does worse than the simplest map (baseline: 0.959 vs 0.964; P5: 0.860 vs 0.947); and the variational model fails (baseline VQC 0.412; P5 QNN 0.49--0.61 on the hold-out). They also share the benign-recall convention (Section~\ref{sec:wdbc}). P5's best map is itself classically computable: Qiskit's Z feature map with one repetition applies a Hadamard and a phase $2x_i$ to each qubit, so its fidelity kernel is $\prod_i\cos^2(x_i-x'_i)$, the same family as the baseline's angle kernel.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P5 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+K & ``Pauli'' and ``PauliZ'' duplicate ZZ and Z. & Use a map with different Pauli terms (for example Y or XX) or drop the third arm. \\
+B, E & Promised $t$ and $F$ tests are absent; timing columns are presented as statistics; units, feature selection, optimizer and a Naive Bayes value are stated two ways. & Report McNemar on the hold-out and a corrected resampled $t$-test on the folds; regenerate text from results. \\
+E, G & Recall is benign recall, contrary to Table~5. & Report malignant sensitivity explicitly. \\
+D & Pseudocode applies resampling and feature selection before the split. & State and enforce in-fold preprocessing. \\
+F & Literature Table~13 compares numbers from other protocols. & Keep Table~14 (same protocol) as the comparison. \\
+H, C & Simulator only; one dataset, no external cohort. & Hardware run on a subsample; external validation. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P6: Sodar et al.\ (2026), quantum ML for encrypted traffic}
+\label{sec:p6}
+\paragraph{What they did.} Two Canadian Institute for Cybersecurity datasets, ISCX-URL2016 (15 features) and ISCXIDS2012 (20 features), are de-duplicated, balanced by undersampling and scaled (pp.~14--15). Three model families are compared: classical SVM and KNN; ``pure'' quantum models, a QSVM whose kernel is the probability of the all-zero state after encoding one sample and un-encoding the other, and a QKNN with a fidelity-based distance; and ``hybrid'' models, in which the quantum encoding output feeds a classical SVM or KNN. Angle and amplitude encodings are used, on PennyLane's \code{lightning.qubit} simulator, with joblib parallelism and only the lower triangle of the Gram matrix computed (p.~16). Training data for the QKNN are subsampled (Algorithm~2, line~37, p.~11).
+
+\paragraph{What they report.} Accuracy on one train--test split (Tables~2--3, p.~18), for example on ISCX-URL2016: SVM 0.9634, QSVM-angle 0.9201, QSVM-amplitude 0.9179, hybrid SVM-amplitude 0.9667; KNN 0.9874, hybrid KNN-amplitude 0.9878. The authors call the study ``a feasibility demonstration rather than a conclusive benchmark'' (p.~17) and acknowledge the lack of variability estimates (p.~23).
+
+\paragraph{Checks.} The pure quantum models are below the classical model of the same family in all 8 comparisons; the hybrid-amplitude gains over classical are $+0.0033$, $+0.0004$, $-0.0022$ and $0.0000$ on one split with no interval \chk{P6-1}. Appendix~C (Table~4) lists the configurations evaluated, but only 5 of the 20 accuracies in Tables~2--3 appear among them, and none of the 8 pure-quantum accuracies does (Table~\ref{tab:sodar}). The Appendix~C quantum accuracies are all multiples of $1/300$ (ISCX-URL2016) and $1/240$ (ISCXIDS2012), which is consistent with test sets of a few hundred records; the paper never states test-set sizes \chk{P6-2}. The data-availability statement says no datasets were analysed \chk{P6-3}.
+
+\paragraph{Relation to the baseline.} P6 uses the same kernel mechanics as the baseline: PennyLane circuits, the overlap read off the all-zero probability, angle and amplitude encodings, an SVC on the precomputed Gram matrix and a KNN on $1-$fidelity. The baseline extends this with a ZZ map, stacking and proper statistics, and cites P6 for the observation that no single encoding is best. Two further points matter for the baseline. First, P6's evidence that quantum kernels are ``competitive'' comes from the hybrid models, not from the pure QSVM and QKNN the baseline uses. Second, with one $R_Y$ rotation per qubit and a Z measurement, each hybrid-angle feature equals $\cos x_i$, a fixed classical transform; the hybrid design is a cheap classical baseline the baseline paper could add. P6's QKNN adds fixed CNOT and $R_Y$ layers after encoding; if the fidelity is the overlap of the two output states, such a data-independent layer cancels out, and the paper does not say which fidelity it computes.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P6: are the main-table accuracies among the Appendix~C configurations of the same block?}
+\label{tab:sodar}
+\input{\tabdir tab_sodar_appendix.tex}
+\end{table}
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P6 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+A, B & One split, no intervals (acknowledged). & Repeated stratified splits with intervals and McNemar tests. \\
+E, G & Main tables do not match Appendix~C; test-set and subsample sizes not stated; fidelity definition unclear. & State sizes; report the configuration behind each main-table number. \\
+H & Simulator only (acknowledged). & Hardware runs on a subsample. \\
+J & No code; incorrect data statement. & Release code and preprocessing. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{P7: Zhang et al.\ (2025), DeSCN-GIF for depression recognition}
+\label{sec:p7}
+\paragraph{What they did.} Five datasets of sustained syllables (\=a, \=e, \=o, y\=\i, y\'u) were recorded at Shenzhen Mental Health Center under ethics approval 2024-k030-01; each has 895 healthy and 176 depressed samples (imbalance ratio 5.09), described by the mean and standard deviation of MFCC features (p.~8). The model is a deep ensemble of stochastic configuration networks with a cost-sensitive least-squares loss weighted by graph-based intuitionistic fuzzy membership scores; the paper proves its universal approximation property. Nine randomized and fuzzy models are compared, each tuned by grid search with 5-fold cross-validation. Each method is run 100 times on random 75/25 splits, with 0--30\,\% of labels flipped to test robustness, and results are summarised by the mean and standard deviation of the G-mean, Friedman and Nemenyi tests, and an ablation (Table~IX, Fig.~5).
+
+\paragraph{What they report.} DeSCN-GIF has the best average G-mean on all five datasets (Tables~II--VI) and in the balanced (91.44$\pm$2.94 vs DSCN 90.67$\pm$2.74, Table~VII) and more imbalanced settings (87.19$\pm$4.01, Table~VIII); all pairwise Nemenyi $p$-values against it are below 0.05 (p.~11).
+
+\paragraph{Checks.} The text once says the tables cover ``40\,\% outliers'', while the tables and Fig.~5 stop at 30\,\% \chk{P7-1}. No other inconsistency was found.
+
+\paragraph{Relation to the baseline.} P7 is classical and uses a different modality, but it addresses the same problem the baseline motivates, imbalanced and noisy clinical classification, and its evaluation is the strongest among the seven: 100 repeated splits, tuned baselines and rank-based tests across datasets. Its headline metric, the G-mean $\sqrt{\text{recall}\times\text{specificity}}$, is useful for the baseline. Computed from the baseline's own Table~9 and Table~13 (Table~\ref{tab:gmean}), the quantum stacker's G-mean (0.724) is level with that of the classical SVM+KNN stacker (0.726), and with preprocessing fitted inside the folds it falls to 0.709. The noise studies differ in kind: P7 flips labels, the baseline adds depolarizing noise to circuits.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{P7 gaps and possible fixes.}
+\begin{tabularx}{\textwidth}{c Y Y}
+\toprule
+Code & Gap and evidence & Possible fix \\
+\midrule
+C, D & Whether a speaker contributes several samples, and whether random splits keep speakers apart, is not stated; one centre. & Speaker-level splits; an external site. \\
+G & Whether flipped labels are also in the test set, and the number of blocks in the Friedman test, are not stated. & State both; evaluate on clean test labels. \\
+E & ``40\,\%'' vs 30\,\% noise levels. & Correct the text. \\
+J & Data and code ``will be shared'' at a URL. & Deposit them in an archive with a DOI. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{Side-by-side comparisons}
+\label{sec:side}
+% ============================================================
+\subsection{Master comparison}
+\begin{table}[H]
+\centering\scriptsize
+\caption{Methods and evaluation side by side. ``Headline'' is as printed except where marked.}
+\label{tab:master}
+\begin{tabularx}{\textwidth}{c L{2.4cm} L{3.4cm} L{3.4cm} Y c}
+\toprule
+Tag & Data & Model and quantum part & Evaluation & Headline & Code \\
+\midrule
+B & Pima, WDBC, Parkinson's & Angle, ZZ, amplitude fidelity kernels; QSVM, QKNN; OOF stacking & 10-fold outer, 5-fold inner, bootstrap CI, McNemar, seed 42 & Diabetes recall 0.553 to 0.621; WDBC parity; PD specificity 0.585 to 0.813 & yes \\
+P1 & Early-stage diabetes; Pima & Causal feature selection; QSVM (ZZFeatureMap); ``QRF'' & One split (104); 10-fold CV for tuning & QSVM = RF 0.9712; Pima QSVM 0.65 & no \\
+P2 & Pima + 2,000 synthetic & Classical ``quantum-inspired'' stack, LR meta-learner & 5-fold OOF on augmented data & F1 0.8933, AUC 0.8699 & yes \\
+P3 & Pima & Random forest, web app & One split of 150 (from figure) & Accuracy 0.833 (computed) & no \\
+P4 & Pima & Transformer + ``HQCAN'' (4 qubits) & One 80/20 split & 99.7 / 99.5 / 99.8 / 98.9\,\% & no \\
+P5 & WDBC & Z/ZZ fidelity kernels; QSVM$\to$QNN & 5-fold $\times$3 + 114 hold-out; nested CV classical & Hybrid 0.956; classical 0.9737 & yes \\
+P6 & Two traffic datasets & QSVM, QKNN, hybrid encodings & One split, sizes not stated & Hybrid-amplitude KNN 0.9878 & no \\
+P7 & Five voice datasets & Deep ensemble SCN, fuzzy cost-sensitive loss & 100 random 75/25 splits; grid search; Friedman--Nemenyi & G-mean 84.9--87.3 & promised \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Pima Indians Diabetes: B, P1, P2, P3, P4}
+\label{sec:pima}
+Five papers use the 768 Pima records, but no two use the same protocol, so their numbers cannot be ranked (Fig.~\ref{fig:pima}). The baseline's results are the only cross-validated ones with intervals. Its accuracies (0.740--0.766) and the re-implementation's leakage-free values (0.746 for stacking, 0.759 for the RBF-SVM) form a tight band; P1's single-split values (0.65--0.76) are at or below it; P3's 0.833 rests on one split of 150 with an interval of 0.766 to 0.884; P4's four values for one model are not credible (Section~\ref{sec:p4}); P2 reports no accuracy and evaluates on augmented data.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_papers_pima.png}
+\caption{Accuracy reported on Pima. Bars are 95\,\% bootstrap intervals printed by the baseline. P3's value is computed from its confusion matrix; P2 is omitted because it reports F1 on augmented data. Values from different protocols are not comparable; the figure shows the spread, not a ranking.}
+\label{fig:pima}
+\end{figure}
+
+On the question the baseline poses, whether quantum kernels help on Pima, the two papers that test a QSVM against classical models on the real records disagree in level but agree in substance: neither finds a quantum model that beats a classical one with statistical support. The baseline's QSVM-ZZ (0.759) equals its RBF-SVM (0.758); P1's QSVM (0.65) is the worst of its four models.
+
+\subsection{Breast cancer (WDBC): B and P5}
+\label{sec:wdbc}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_papers_wdbc.png}
+\caption{Accuracy reported on WDBC. The baseline's values are 10-fold pooled with bootstrap intervals; P5's quantum values are on a 114-record hold-out and its classical values are nested cross-validation means.}
+\label{fig:wdbc}
+\end{figure}
+
+Both papers find the classical models at least as accurate as the quantum kernels (Fig.~\ref{fig:wdbc}), the ZZ map worse than the simplest map, and the variational model far below everything else. The protocols differ (10-fold pooled vs a single hold-out; PCA to eight components rescaled to $[0,\pi]$ vs seven selected standardised features), so the gap between the baseline's ZZ result (0.959) and P5's (0.860) cannot be attributed to the kernel alone.
+
+\paragraph{Both papers report benign recall.} In scikit-learn's version of WDBC, malignant is class 0 and benign class 1. For the baseline's RBF-SVM (accuracy 0.970, recall 0.983, specificity 0.948), the printed accuracy is reproduced only if recall is the benign-class recall: $(0.983\times357+0.948\times212)/569=0.970$, whereas the opposite reading gives 0.961 \chk{B-3}. In P5 the hold-out confusion matrix shows the same coding \chk{P5-8}. In both papers, cancer detection is the ``specificity'' column (baseline RBF-SVM 0.948, stacking 0.943; P5 hold-out 0.905). Readers who take ``recall'' as cancer sensitivity will overstate it.
+
+\subsection{Kernel mechanics: B, P5, P6 and P1}
+\begin{table}[H]
+\centering\footnotesize
+\caption{How the quantum kernels are built.}
+\begin{tabularx}{\textwidth}{l Y Y Y Y}
+\toprule
+ & B & P5 & P6 & P1 \\
+\midrule
+Library, device & PennyLane, CPU simulator & Qiskit Aer statevector & PennyLane \code{lightning.qubit} & Qiskit statevector \\
+Encodings & Angle (8 qubits), ZZ/IQP (8), amplitude (3) & Z, ZZ, ``Pauli'' (7 qubits, 1 repetition) & Angle, amplitude & ZZFeatureMap \\
+Kernel & Fidelity via all-zero probability & Qiskit fidelity kernel & Fidelity via all-zero probability & Squared inner product of statevectors \\
+Classifier & SVC ($C=1$), KNN ($k=5$), stacking & SVC ($C=1$) $\to$ QNN & SVC, KNN (own) & SVC \\
+Input scaling & z-score, PCA 8, $[0,\pi]$, fitted globally & z-score on training data, 7 features & StandardScaler (classical), MaxAbs then clip to $[0,1]$ (QKNN) & 10 or 7 selected features; QSVM scaling not described \\
+Closed-form kernel? & Angle and amplitude yes & Z yes ($\prod\cos^2(x_i-x'_i)$) & Angle yes & not determined \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Imbalance and balanced metrics}
+P2 rebalances by synthesis, P6 by undersampling, P7 by a cost-sensitive loss, and the baseline only through balanced class weights in its meta-learner. P7's G-mean puts the baseline's Diabetes result in a different light (Table~\ref{tab:gmean}).
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{G-mean $=\sqrt{\text{recall}\times\text{specificity}}$ of the baseline's Diabetes models, computed from its Tables 9 and 13 and from the re-implementation with preprocessing fitted inside the folds.}
+\label{tab:gmean}
+\begin{adjustbox}{max width=\textwidth}
+\input{\tabdir tab_gmean.tex}
+\end{adjustbox}
+\end{table}
+
+% ============================================================
+\section{Three-way comparison: baseline paper, re-implementation and the seven papers}
+\label{sec:threeway}
+% ============================================================
+The re-implementation (R) is this repository's independent rerun of the baseline on the Pima Diabetes data (Table~\ref{tab:reimpl}). It was limited to Diabetes at your request, so on breast cancer the comparison stays between B and P5. Placing R next to B and the seven papers answers three questions: does R confirm what B printed, does it change how B compares with the other papers, and which of the other papers' gaps does it close.
+
+\subsection{Diabetes numbers from the three sources}
+\begin{table}[H]
+\centering\footnotesize
+\caption{Pima Diabetes results from the baseline as printed (B), the re-implementation (R) and the comparison papers. R rows come from \code{reimplementation/results/diabetes/}; G-mean is computed. ``--'' means not reported. P2's AUC is on augmented data; P3's values are computed from its confusion matrix; P4's are printed but contradict each other (Section~\ref{sec:p4}). Differences of 0.001 between B and R rows come from rounding of the printed inputs.}
+\label{tab:threeway}
+\begin{adjustbox}{max width=\textwidth}
+\input{\tabdir tab_threeway_pima.tex}
+\end{adjustbox}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\textwidth]{fig_threeway_recall_spec.png}
+\caption{Recall against specificity on Pima. Grey curves are constant G-mean. B's quantum stacking and its leakage-free rerun trade specificity for recall along the same curve as the classical stacker; the RBF-SVM points from B and R coincide.}
+\label{fig:threeway}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{R confirms B under B's own protocol.} Stacking reproduces at 0.766 accuracy, 0.621 recall, 0.844 specificity and 0.734 ROC-AUC; the RBF-SVM at 0.758, 0.553, 0.867 and 0.826.
+  \item \textbf{The recall gain survives leakage-free preprocessing; the accuracy gain does not.} With every transformer fitted inside the folds, stacking falls to 0.746 accuracy but keeps recall 0.616 against 0.549 for the RBF-SVM. The G-mean gap narrows from 0.032 to 0.017.
+  \item \textbf{Stacking trades specificity for recall rather than adding accuracy.} Across ten seeds the single angle-kernel QSVM is the most accurate model (0.769), ahead of stacking (0.762) and the RBF-SVM (0.761). In Fig.~\ref{fig:threeway} the quantum stacker lies on the same G-mean curve as B's classical SVM+KNN stacker.
+  \item \textbf{Tuned classical baselines reach the same accuracy} (RBF-SVM 0.760, XGBoost 0.759), and the tuned classical stacker keeps the highest recall of any model (0.664).
+  \item \textbf{The variational baseline fails for a reason B does not show.} With the released loss the VQC never trains (0.564). With the gradient fixed it trains but reaches 0.645 with recall 0.280, below the 0.651 majority rate. A trained VQC is also weak, as P5's COBYLA-trained QNN is on WDBC, but neither result tests the barren-plateau explanation B gives.
+  \item \textbf{Against the other papers}, R's leakage-free numbers are the only Pima results in the set produced with in-fold preprocessing, several seeds and multiplicity correction. P1 and P3 come from single splits, P2 from augmented data, and P4's are internally impossible. P3's random forest has the highest credible G-mean (0.794), but from one split of 150 with an accuracy interval of 0.766 to 0.884.
+\end{itemize}
+
+\subsection{Claim by claim}
+\begin{table}[H]
+\centering\scriptsize
+\caption{The main claims in play, as made by the baseline, as found by the re-implementation, and as shown by the seven papers.}
+\label{tab:claims}
+\begin{tabularx}{\textwidth}{L{2.6cm} L{3.2cm} Y L{4.0cm}}
+\toprule
+Claim & Baseline paper & Re-implementation & Seven papers \\
+\midrule
+Quantum stacking raises Pima recall & 0.553 $\to$ 0.621, $p=0.004$ & \OK{Reproduces exactly}; ahead in 10/10 seeds; survives in-fold preprocessing (0.616 vs 0.549). \WARN{Holm $p$ = 0.035, 0.112 or 0.204} depending on the resampling choice & No other paper tests recall of a quantum model on the real Pima records; P1's QSVM is its weakest model (0.65 accuracy) \\
+Quantum stacking matches or beats classical accuracy & 0.766 vs 0.758 & \WARN{Parity}: 6/10 seeds; 0.746 vs 0.759 in-fold; tuned RBF 0.760, XGBoost 0.759 & P1: random forest best on Pima; P5: classical 0.9737 above hybrid 0.956 on WDBC; P6: classical above pure quantum in 8/8 \\
+Adaptive stacking adds value over single kernels & stacking ranked first & \WARN{Not on accuracy}: single angle QSVM 0.769 over 10 seeds; inner-CV subset selection never chooses the paper's quartet by accuracy (0/10 folds) and its choices score 0.758--0.760 & P2: meta-learner F1 0.8962 vs 0.8950 for its own random forest \\
+The VQC fails because of barren plateaus & AUC 0.51--0.57 & \BAD{Untrained}: zero gradient in the released loss; with the fix, 0.645 accuracy, AUC 0.595 & P5: trained QNN 0.49--0.61 on the hold-out; no paper measures gradient variance \\
+Graceful degradation under noise & Table 19 & \BAD{Reference mismatch}: with the same circuit at 0\,\% and 10\,\%, degradation is $+0.117$ (ZZ-SVM) and $+0.167$ (stacking) & No paper runs circuit noise; P7's label-flip robustness is a different question \\
+Quantum kernels give separability classical kernels cannot & ``true Hilbert space'' & \WARN{Angle and amplitude kernels are closed-form} classical functions (matched to $10^{-15}$) & P5's best (Z) map and P6's hybrid-angle features are closed-form too; P2 is openly classical \\
+Classical ensembles do not match the quantum one & text, p.~29 & \WARN{Classical stacker G-mean 0.726 vs 0.724}; tuned stacker recall 0.664 & P5 and P6 find classical models at least as accurate \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Pipeline component by component}
+\begin{table}[H]
+\centering\scriptsize
+\caption{Each stage of the baseline pipeline, what the re-implementation found, and what the closest comparison papers did at that stage.}
+\label{tab:components}
+\begin{tabularx}{\textwidth}{L{2.0cm} L{3.4cm} Y L{4.2cm}}
+\toprule
+Stage & Baseline paper & Re-implementation & Closest papers \\
+\midrule
+Preprocessing & z-score, PCA to 8, $[0,\pi]$; fitted on all 768 rows & Global version reproduced exactly; outer-fold-local and strictly nested versions added & P5 fits the scaler on training data (Table~5) but its pseudocode does not; P2 synthesises before the folds; P3, P4, P6 do not say \\
+Kernels & Angle ($R_Y$ in text, $R_X$ in code), ZZ (nearest-neighbour in text, all-to-all in code), amplitude & Gram matrices match PennyLane circuits to $10^{-15}$; $R_Y$ and $R_X$ give identical kernels; angle and amplitude are closed-form & P5: Z (closed-form) and ZZ; P6: same overlap construction; P1: ZZFeatureMap \\
+Classifiers and ensemble & QSVM ($C=1$), QKNN ($k=5$), OOF stacking of four, hard voting of three & Predictions identical to the authors' released functions (0 disagreements); nested subset selection chooses other subsets & P2: stack on calibrated probabilities; P5: QSVM $\to$ QNN; P6: encodings into classical models \\
+Statistics & 1,000 bootstrap resamples, McNemar, paired $t$, seed 42 & Verbatim bootstrap reproduces 36/36 interval strings; 10 seeds; Holm over 32 tests with $10^4$ resamples; equivalence tests & P7: 100 splits, Friedman--Nemenyi; P5: 3 seeds, no tests; others none \\
+Classical baselines & RBF-SVM, XGBoost, RF, SVM+KNN stacker, untuned & Nested grid search: parity in accuracy & P5: nested CV (best on WDBC); P7: grid search; P2: copied \\
+Variational model & VQC, 48 parameters, MSE, Nesterov & Zero gradient in released loss; fixed loss trains, still below majority rate & P5: 2-qubit QNN with COBYLA, weak on hold-out \\
+Noise & Depolarizing 0/5/10\,\%, 60-patient subsamples & Density-matrix simulator validated to $2\times10^{-14}$; reference mismatch found & None of the seven \\
+Explainability & SHAP, LIME, permutation, PCA backtracking & Reproduced exactly & P1: causal effects on raw features; P3: RF importances \\
+Code & GitHub & In \code{reimplementation/}, with an independent verification script & P2: GitHub; P5: Zenodo \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Where the re-implementation sits among the papers}
+The practice and gap matrices in the next two sections include R as a column, scored by the same rules. R uses 10.5 of 12 practices and has 2.5 of 11 gap categories, against 10 and 6 for the baseline. What remains open for R is what remains open for the whole set: no external cohort (Pima has one record per person, so person-level leakage is not the issue), simulation only, class imbalance handled only through the meta-learner's class weights, and code that sits in this repository but whose public release was not checked. R was scored by the same team that built it, which readers should weigh.
+
+% ============================================================
+\section{Evaluation practices}
+\label{sec:practice}
+% ============================================================
+Table~\ref{tab:practice} scores twelve practices. ``n/s'' means the paper does not say, and scores as absent. Column R is the re-implementation of the baseline (Diabetes only), scored by the same rules.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Evaluation practices (yes = 1, part = 0.5).}
+\label{tab:practice}
+\begin{adjustbox}{max width=\textwidth}
+\input{\tabdir tab_practices.tex}
+\end{adjustbox}
+\end{table}
+
+\paragraph{Notes on partial and unclear marks.} B: classical baselines untuned; leakage controls are strict for stacking but preprocessing is global. P1: cross-validation is used for tuning, the reported results come from one split; causal selection precedes the split. P2: model choices partly inside folds (meta-learner on out-of-fold outputs) but the phase-map scale is tuned on a separate 20\,\% hold-out and augmentation precedes the folds; explainability is limited to graph plots. P3, P4, P6: data handling relative to the split is not stated. P5: nested cross-validation for classical baselines only; per-fold values but no interval for the headline hold-out result; Table~5 and the pseudocode disagree on leakage controls. P6: encoding and hyperparameter sweeps count as a partial ablation. P7: code promised, not deposited. R: code is in this repository but its public release was not checked; no external cohort.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_papers_scores.png}
+\caption{Practices used (left, from Table~\ref{tab:practice}) and gap categories present (right, from Table~\ref{tab:gaps}), including the re-implementation of the baseline (Diabetes only). Counts are not weights: one impossible number (P4) matters more than one missing calibration plot.}
+\label{fig:scores}
+\end{figure}
+
+% ============================================================
+\section{Gaps}
+\label{sec:gaps}
+% ============================================================
+\subsection{Gap matrix}
+\begin{table}[H]
+\centering\footnotesize
+\caption{Gap categories (yes = gap present), with the re-implementation of the baseline as column R. ``n/a'' marks a category that does not apply because the paper makes no quantum claim.}
+\label{tab:gaps}
+\begin{adjustbox}{max width=\textwidth}
+\input{\tabdir tab_gaps.tex}
+\end{adjustbox}
+\end{table}
+
+\subsection{Gaps of the baseline and how to fix them}
+\label{sec:basegaps}
+\begin{table}[H]
+\centering\footnotesize
+\caption{The baseline's gaps, with evidence and a possible fix. ``Measured'' means the effect was measured by the re-implementation.}
+\label{tab:basegaps}
+\begin{tabularx}{\textwidth}{c L{4.3cm} Y Y}
+\toprule
+Code & Gap & Evidence & Possible fix \\
+\midrule
+D & Preprocessing (z-score, PCA, $[0,\pi]$ scaling) fitted on all data before cross-validation. & Measured: Diabetes stacking 0.766 to 0.746; RBF-SVM unchanged (0.758 to 0.759). & Fit every transformer inside each training fold; recompute the Gram matrices per fold (cheap for closed-form kernels). \\
+D, C & Parkinson's ``195 patients'' are 195 recordings of 31 people (UCI documentation); splits are by recording. & Not re-run here. & Group folds by person; report person-level metrics. \\
+B, E & Recall gain significant only under one resampling choice; accuracy gain not robust. & Measured: Holm $p=0.035$ ($10^4$ resamples), 0.112 (paper's 1,000), 0.204 (parametric); accuracy ahead in 6/10 seeds. & Pre-specify the primary metric; several seeds; multiplicity correction. \\
+F, E & Classical baselines untuned; the text says the quantum ensemble ``matched or outperformed'' them while the classical stacker has higher Diabetes recall (0.670) and a G-mean within 0.002 of it. & Printed (pp.~22, 29) and measured (tuned RBF 0.760, XGBoost 0.759). & Tune baselines with the same nested protocol; report intervals and paired tests for Table~13; correct the text. \\
+K & The released VQC loss has a zero gradient. & Measured: the VQC never trains. & Use a differentiable stack of outputs; show training curves and gradient variance before claiming barren plateaus. \\
+E & Noise table compares the chain kernel at 0--10\,\% with results from the all-to-all kernel. & Measured: degradations $+0.117$ and $+0.167$ with a consistent reference. & Use one circuit at every noise level. \\
+G & Text and code differ: $R_Y$ vs $R_X$ (no numerical effect), nearest-neighbour vs all-to-all ZZ, 80/20 vs in-fold VQC. & Re-implementation. & Align the text with the released code. \\
+H & Two of three kernels are closed-form classical functions; no hardware run. & Re-implementation to $10^{-15}$. & Present the closed forms; add hardware runs for a subsample; isolate what ZZ adds. \\
+E & WDBC ``recall'' is benign recall. & Computed \chk{B-3}. & Report malignant sensitivity explicitly. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Gaps shared by the whole set}
+\begin{itemize}
+  \item \textbf{No external or person-level validation (C)}: all eight papers. Fix: an external cohort for each disease (another Pima-like population, a second breast cytology dataset, a second voice cohort), or at least person-grouped folds.
+  \item \textbf{No hardware (H)}: every paper with a quantum claim simulates only. Fix: run the kernel estimation for a subsample on hardware with shot noise and compare Gram matrices with the simulator.
+  \item \textbf{Rare significance testing (B)}: only the baseline and P7 test differences between models. Fix: McNemar tests on paired predictions, corrected resampled $t$-tests or bootstrap intervals for differences, and multiplicity correction.
+  \item \textbf{Internal consistency (E)}: five of the eight papers print numbers that contradict their own text or tables, and two more do so in minor ways. Fix: generate tables and in-text numbers from the same result files, as the re-implementation in this repository does.
+\end{itemize}
+
+\subsection{What the papers can lend each other}
+\label{sec:lessons}
+\begin{table}[H]
+\centering\footnotesize
+\caption{Transferable practices, with the caution each transfer needs.}
+\begin{tabularx}{\textwidth}{L{2.6cm} Y Y}
+\toprule
+Direction & What transfers & Caution \\
+\midrule
+P7 $\to$ B & 100 repeated splits; grid-searched baselines; Friedman--Nemenyi across datasets; G-mean as balanced headline; label-noise robustness. & Keep splits grouped by person where needed. \\
+P5 $\to$ B & An untouched hold-out next to cross-validation; nested CV for classical baselines; per-fold tables. & Fix the feature-map duplication before reuse. \\
+P2 $\to$ B & Probability-level meta-features (calibrated probabilities, logits) instead of binary votes; isotonic calibration of base models; versioned code release. & Never synthesise data before the folds. \\
+P6 $\to$ B & Hybrid encoding baselines (quantum encoding into a classical model); parallel, lower-triangle Gram computation. & The hybrid-angle features are $\cos x_i$, a classical transform. \\
+P1 $\to$ B & Causal or effect-size analysis on raw clinical variables. & Run feature analysis inside the folds. \\
+B $\to$ P1, P3, P4, P6 & Cross-validation, bootstrap intervals, McNemar tests, ablation, calibration, public code. & Fit preprocessing inside the folds, which the baseline itself did not. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{Recommended fixes, in priority order}
+\label{sec:fixes}
+% ============================================================
+\begin{enumerate}
+  \item \textbf{Do not cite P4's 99.7\,\% or P3's AUC of 1.00 as results.} Both are contradicted by the papers' own numbers.
+  \item \textbf{Re-evaluate the baseline leakage-free.} Fit preprocessing inside the folds, use several seeds and correct for multiplicity; on Diabetes this has been done in this repository and shows parity with the RBF-SVM.
+  \item \textbf{Put the methods on one protocol.} To compare the papers rather than their reporting, run the baseline's kernels, P5's Z map, P6's hybrid encodings, P2's stack without pre-fold synthesis, and tuned random forest, XGBoost and RBF-SVM on the same nested, repeated, stratified splits of Pima and WDBC, and report accuracy, sensitivity, specificity, G-mean, MCC and ROC-AUC with intervals and paired tests.
+  \item \textbf{Report clinically meaningful classes.} On WDBC, report malignant sensitivity; on Pima, diabetic recall with specificity and G-mean.
+  \item \textbf{Fix or drop the variational baselines.} Train them with a differentiable loss and report gradient variance before drawing barren-plateau conclusions.
+  \item \textbf{Validate externally} and, for Parkinson's and voice data, by person.
+  \item \textbf{Add a hardware or shot-noise experiment} for the one kernel that is not classically closed-form (ZZ/IQP), since that is the only place a quantum advantage could appear.
+\end{enumerate}
+
+% ============================================================
+\section{What could not be checked}
+\label{sec:limits}
+% ============================================================
+\begin{itemize}
+  \item None of the seven papers' code was run; P2 and P5 publish code, the others do not.
+  \item P1's Pima test-set size, P3's split and random-forest settings, P4's quantum circuit and baseline protocol, P6's test-set sizes, and whether P7's speakers recur across splits are not stated and could not be inferred beyond what is reported above.
+  \item Values read from figures (P1 Fig.~8--9, P2 Fig.~1, P3 Figs.~3--5, P4 Fig.~2 bars, P7 Tables~II--VIII rendered as images) could not be machine-checked against a text layer; they were read at full resolution.
+  \item The re-implementation covers the baseline's Diabetes experiments only; its WDBC and Parkinson's numbers in this report are the published values.
+  \item The Parkinson's subject structure (195 recordings of 31 people) comes from the UCI dataset documentation, not from the baseline paper.
+\end{itemize}
+
+\appendix
+% ============================================================
+\section{All consistency checks}
+\label{app:checks}
+% ============================================================
+Generated by the checks script. The same content, in plain text, is in:\\
+\path{reimplementation/results/papers_comparison/checks.txt}
+{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{\tabdir tab_checks.tex}
+}
+
+\section{Reproducing this report}
+\begin{verbatim}
+.venv\Scripts\python.exe -I reimplementation\papers_consistency_checks.py
+cd latex_report
+..\tectonic_bin\tectonic.exe PAPERS_COMPARISON_REPORT.tex
+\end{verbatim}
+The script exits with status 1 if any transcribed value cannot be re-found on its stated page; the log of all 180 look-ups is in \path{reimplementation/results/papers_comparison/text_log.json}.
+
+\end{document}

@@ -1,0 +1,27 @@
+{
+  "paper": "P03_Kotha",
+  "clean_seeds": [
+    0,
+    1,
+    42
+  ],
+  "paper_seed": 42,
+  "n_splits": 5,
+  "subsample_n": 2000,
+  "subsample_seed": 42,
+  "max_qubits": 8,
+  "python": "3.13.16",
+  "numpy": "2.4.6",
+  "sklearn": "1.6.1",
+  "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+  "runtime_s": 103.5,
+  "n_rows": 268,
+  "data_sha256": {
+    "pima": "6bfe5d0f379d17a0e0819b996407e3c09bf80febd4287f2ed212190dfff154af",
+    "sylhet": "f6bf14c5d2e939feccd78750da2542f131b78d80355ccf35f29554b1f03fcb97",
+    "cdc": "9f71fda9d4ae5f4878c99b9233b6a16accfa9a17c194116a6b78100540934964",
+    "hosp130": "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97"
+  },
+  "method": "RF n_estimators=100 on raw features; LR reference; inner-CV threshold variant (clean only)",
+  "paper_protocol": "single 80/20 stratified split seed 42; paper_10splits = seeds 0..9"
+}

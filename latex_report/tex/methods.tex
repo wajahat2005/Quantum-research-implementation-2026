@@ -1,0 +1,71 @@
+% methods.tex - Mathematical Formulation and Experimental Protocol
+\section{Methodological Formulation and Experimental Protocols}
+\label{sec:methods-formal}
+
+\subsection{Data Preprocessing and Quantum Mapping}
+The Wisconsin Diagnostic Breast Cancer (\wdbc) dataset comprises $N=569$ samples, each with $D=30$ continuous nuclear morphometric features, partitioned into $N_0 = 212$ malignant (Class~0) and $N_1 = 357$ benign (Class~1) instances.
+
+\subsubsection{Standardization and PCA Projection}
+Each raw feature vector $x \in \mathbb{R}^{30}$ undergoes $z$-score standardization:
+\begin{equation}
+x'_i = \frac{x_i - \mu_i}{\sigma_i}, \quad i \in \{1, \dots, 30\},
+\end{equation}
+where $\mu_i$ and $\sigma_i$ are the empirical mean and standard deviation. Dimensionality reduction via Principal Component Analysis (PCA) projects $x'$ onto an 8-dimensional subspace:
+\begin{equation}
+x_{\mathrm{pca}} = W^\top x', \quad W \in \mathbb{R}^{30 \times 8}.
+\end{equation}
+The explained variance ratio across the 8 components sums to exactly:
+\begin{equation}
+\sum_{k=1}^8 \lambda_k / \sum_{j=1}^{30} \lambda_j = 0.92598 \quad (92.598\%).
+\end{equation}
+
+\subsubsection{Angular Bounding}
+The components are mapped into the angular domain $[0, \pi]$ using MinMax scaling:
+\begin{equation}
+x_{\mathrm{q}, k} = \pi \cdot \frac{x_{\mathrm{pca}, k} - \min(x_{\mathrm{pca}, k})}{\max(x_{\mathrm{pca}, k}) - \min(x_{\mathrm{pca}, k})}, \quad k \in \{1, \dots, 8\}.
+\end{equation}
+
+\subsection{Quantum Feature Maps and Gram Matrix Construction}
+Three quantum kernel feature maps $U(x)$ map classical vectors $x_{\mathrm{q}} \in [0, \pi]^8$ into Hilbert space states $|\psi(x)\rangle = U(x)|0\rangle^{\otimes n}$. The fidelity kernel is computed as:
+\begin{equation}
+K(x_i, x_j) = |\langle\psi(x_j)|\psi(x_i)\rangle|^2 = |\langle 0|^{\otimes n} U^\dagger(x_j) U(x_i) |0\rangle^{\otimes n}|^2.
+\end{equation}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Angle Feature Map (8 Qubits):} Individual single-qubit rotations:
+  \begin{equation}
+  U_{\mathrm{Angle}}(x) = \bigotimes_{k=1}^8 R_X(x_{\mathrm{q}, k}), \quad K_{\mathrm{Angle}}(x_i, x_j) = \prod_{k=1}^8 \cos^2\left(\frac{x_{i, k} - x_{j, k}}{2}\right).
+  \end{equation}
+  \item \textbf{ZZ / IQP Feature Map (8 Qubits, All-to-All Complete Graph $K_8$):} Entangling feature map with all $\binom{8}{2}=28$ pairwise interactions:
+  \begin{equation}
+  U_{\mathrm{ZZ}}(x) = \exp\left(i \sum_{1 \le j < k \le 8} x_{\mathrm{q}, j} x_{\mathrm{q}, k} Z_j Z_k\right) \exp\left(i \sum_{k=1}^8 x_{\mathrm{q}, k} Z_k\right) H^{\otimes 8}.
+  \end{equation}
+  \item \textbf{Amplitude Feature Map (3 Qubits):} Normalized amplitude encoding into an $2^3 = 8$-dimensional Hilbert space:
+  \begin{equation}
+  |\psi_{\mathrm{Amp}}(x)\rangle = \sum_{k=0}^7 \frac{x_{\mathrm{q}, k}}{\|x_{\mathrm{q}}\|_2} |k\rangle, \quad K_{\mathrm{Amp}}(x_i, x_j) = \left(\frac{x_i^\top x_j}{\|x_i\|_2 \|x_j\|_2}\right)^2.
+  \end{equation}
+\end{enumerate}
+
+\subsection{Quantum Base Classifiers}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Quantum Support Vector Machine (QSVM):} Precomputed kernel SVM solving:
+  \begin{equation}
+  \min_{\alpha} \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j K(x_i, x_j) - \sum_i \alpha_i \quad \text{s.t.} \quad 0 \le \alpha_i \le C, \; \sum_i \alpha_i y_i = 0.
+  \end{equation}
+  \item \textbf{Quantum $k$-Nearest Neighbors (QKNN):} Metric derived directly from quantum kernel fidelity:
+  \begin{equation}
+  D(x_i, x_j) = \max(0, 1 - K(x_i, x_j)), \quad k = 5.
+  \end{equation}
+\end{itemize}
+
+\subsection{Leakage-Free Out-of-Fold Stacking Protocol}
+The stacking meta-learner employs a nested cross-validation scheme:
+\begin{enumerate}[leftmargin=*]
+  \item Outer loop: 10-fold Stratified Cross-Validation on the full dataset ($N=569$).
+  \item Inner loop: Inside each outer training fold ($N_{\mathrm{train}} \approx 512$), an inner 5-fold Stratified CV generates out-of-fold predictions $z_m \in \{0, 1\}$ for each base model $m \in \{1, \dots, 4\}$.
+  \item Meta-Learner: Balanced Logistic Regression fits weights $w \in \mathbb{R}^4$ and intercept $b$:
+  \begin{equation}
+  P(y = 1 | z) = \sigma\left(\sum_{m=1}^4 w_m z_m + b\right) = \frac{1}{1 + \exp\left(-\sum_{m=1}^4 w_m z_m - b\right)}.
+  \end{equation}
+  \item Outer test fold evaluation: Full-trained base models predict outer test features, which are evaluated by the fitted meta-learner.
+\end{enumerate}

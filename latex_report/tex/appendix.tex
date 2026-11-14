@@ -1,0 +1,117 @@
+% appendix.tex - Supplementary Artifacts, Full Data Tables, and Code Audits
+\appendix
+
+\section{Full 32-Hypothesis Holm-Bonferroni Testing Records}
+\label{app:full-holm-tables}
+
+\Cref{tab:full-parametric-holm} provides the exhaustive 32-test parametric McNemar hypothesis record comparing each quantum and ensemble model against Classical RBF-SVM across all four clinical metrics on WDBC.
+
+\begin{longtable}{llcccc}
+\caption{Complete 32-hypothesis parametric McNemar analysis against Classical RBF-SVM.}\label{tab:full-parametric-holm}\\
+\toprule
+\textbf{Model} & \textbf{Metric} & \textbf{Raw $p$-Value} & \textbf{Holm $p_{\mathrm{adj}}$} & \textbf{Raw Sig ($0.05$)} & \textbf{Holm Sig ($0.05$)} \\
+\midrule
+\endfirsthead
+\multicolumn{6}{c}{\small\itshape (Table~\ref{tab:full-parametric-holm} continued)}\\
+\toprule
+\textbf{Model} & \textbf{Metric} & \textbf{Raw $p$-Value} & \textbf{Holm $p_{\mathrm{adj}}$} & \textbf{Raw Sig ($0.05$)} & \textbf{Holm Sig ($0.05$)} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+
+QKNN (Amplitude) & Specificity & 0.0011 & \textbf{0.0352} & \textbf{True} & \textbf{True (Worse)} \\
+QKNN (Amplitude) & Precision   & 0.0017 & 0.0527 & \textbf{True} & False \\
+QKNN (ZZ Map)    & Precision   & 0.0032 & 0.0960 & \textbf{True} & False \\
+QKNN (ZZ Map)    & Specificity & 0.0037 & 0.1073 & \textbf{True} & False \\
+QSVM (Amplitude) & Precision   & 0.0043 & 0.1204 & \textbf{True} & False \\
+QSVM (Amplitude) & Specificity & 0.0070 & 0.1890 & \textbf{True} & False \\
+QSVM (Angle)     & Precision   & 0.0213 & 0.5538 & \textbf{True} & False \\
+QSVM (Angle)     & Specificity & 0.0239 & 0.5975 & \textbf{True} & False \\
+QKNN (Angle)     & Specificity & 0.0242 & 0.5975 & \textbf{True} & False \\
+QKNN (Angle)     & Precision   & 0.0277 & 0.6371 & \textbf{True} & False \\
+QKNN (Amplitude) & Accuracy    & 0.0318 & 0.6996 & \textbf{True} & False \\
+QKNN (ZZ Map)    & Accuracy    & 0.0437 & 0.9177 & \textbf{True} & False \\
+Hard Voting      & Precision   & 0.0500 & 1.0000 & False & False \\
+Hard Voting      & Specificity & 0.0510 & 1.0000 & False & False \\
+QSVM (Angle)     & Recall      & 0.0812 & 1.0000 & False & False \\
+QKNN (Angle)     & Accuracy    & 0.1111 & 1.0000 & False & False \\
+QSVM (ZZ Map)    & Accuracy    & 0.1396 & 1.0000 & False & False \\
+QSVM (Amplitude) & Accuracy    & 0.1697 & 1.0000 & False & False \\
+Hard Voting      & Accuracy    & 0.1765 & 1.0000 & False & False \\
+QSVM (Amplitude) & Recall      & 0.2107 & 1.0000 & False & False \\
+QSVM (ZZ Map)    & Recall      & 0.2695 & 1.0000 & False & False \\
+QSVM (Angle)     & Accuracy    & 0.3917 & 1.0000 & False & False \\
+OOF Stacking     & Accuracy    & 0.3917 & 1.0000 & False & False \\
+QSVM (ZZ Map)    & Precision   & 0.4594 & 1.0000 & False & False \\
+QSVM (ZZ Map)    & Specificity & 0.5086 & 1.0000 & False & False \\
+Hard Voting      & Recall      & 0.5911 & 1.0000 & False & False \\
+OOF Stacking     & Precision   & 0.6176 & 1.0000 & False & False \\
+OOF Stacking     & Recall      & 0.6193 & 1.0000 & False & False \\
+QKNN (Amplitude) & Recall      & 0.6783 & 1.0000 & False & False \\
+OOF Stacking     & Specificity & 0.6896 & 1.0000 & False & False \\
+QKNN (ZZ Map)    & Recall      & 0.8121 & 1.0000 & False & False \\
+QKNN (Angle)     & Recall      & 0.9852 & 1.0000 & False & False \\
+\end{longtable}
+
+\section{Exhaustive Quantum Gram Matrix Diagnostic Properties}
+\label{app:gram-checks-full}
+
+\Cref{tab:app-gram-checks} details the complete numerical properties for all thirteen computed Gram matrices ($N=60$ benchmark). Source: \texttt{audit\_results/noise\_nisq/noisy\_gram\_matrix\_checks.csv}.
+
+\begin{longtable}{p{4.5cm}ccccp{2.5cm}}
+\caption{Full matrix diagnostic properties across clean and noisy regimes ($N=60$).}\label{tab:app-gram-checks}\\
+\toprule
+\textbf{Matrix Configuration} & \textbf{Noise $p$} & \textbf{Diag Mean} & \textbf{Min Eigenval} & \textbf{Max Eigenval} & \textbf{Is PSD?} \\
+\midrule
+\endfirsthead
+\multicolumn{6}{c}{\small\itshape (Table~\ref{tab:app-gram-checks} continued)}\\
+\toprule
+\textbf{Matrix Configuration} & \textbf{Noise $p$} & \textbf{Diag Mean} & \textbf{Min Eigenval} & \textbf{Max Eigenval} & \textbf{Is PSD?} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+
+Clean Angle (RX)      & 0.00 & 1.0000 & $+1.79 \times 10^{-4}$  & 38.278 & \textbf{True} \\
+Clean ZZ ($K_8$)      & 0.00 & 1.0000 & $+1.12 \times 10^{-1}$  & 9.958  & \textbf{True} \\
+Clean Amplitude       & 0.00 & 1.0000 & $-4.07 \times 10^{-15}$ & 53.906 & \textbf{True} \\
+Released Noisy ZZ     & 0.05 & 0.2050 & $+1.15 \times 10^{-3}$  & 4.110  & \textbf{True} \\
+Released Noisy ZZ     & 0.10 & 0.0545 & $+2.22 \times 10^{-4}$  & 1.335  & \textbf{True} \\
+Corrected Noisy ZZ    & 0.05 & 0.0116 & $+5.28 \times 10^{-4}$  & 0.309  & \textbf{True} \\
+Corrected Noisy ZZ    & 0.10 & 0.0044 & $+1.26 \times 10^{-5}$  & 0.239  & \textbf{True} \\
+Noisy Angle (RY)      & 0.05 & 0.5869 & $+9.27 \times 10^{-5}$  & 23.097 & \textbf{True} \\
+Noisy Angle (RX)      & 0.05 & 0.5869 & $+9.27 \times 10^{-5}$  & 23.097 & \textbf{True} \\
+Noisy Angle (RY)      & 0.10 & 0.3454 & $+4.72 \times 10^{-5}$  & 14.005 & \textbf{True} \\
+Noisy Angle (RX)      & 0.10 & 0.3454 & $+4.72 \times 10^{-5}$  & 14.005 & \textbf{True} \\
+Noisy Amplitude       & 0.05 & 0.8116 & $-2.90 \times 10^{-3}$  & 44.081 & \textbf{False} \\
+Noisy Amplitude       & 0.10 & 0.6593 & $-5.78 \times 10^{-3}$  & 36.110 & \textbf{False} \\
+\end{longtable}
+
+All 13 matrices exhibit exact machine-precision symmetry ($\max |K - K^\top| = 0.00\mathrm{e}{+}00$).
+
+\section{Computational Environment and Software Specifications}
+\label{app:compute-specs}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Hardware configuration and verified environment parameters.}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parameter} & \textbf{Specification} \\
+\midrule
+Operating System & Windows 10 Enterprise \\
+Host Hardware    & Dell OptiPlex 7080 Workstation \\
+Processor (CPU)  & Intel Core i7-10700 @ 2.90 GHz (8 physical cores, 16 logical threads) \\
+Memory (RAM)     & 16.0 GB DDR4 \\
+Graphics (GPU)   & Intel UHD Graphics 630 (No CUDA GPU; CPU execution exclusively) \\
+Python Version   & Python 3.10.x virtual environment (\texttt{.venv}) \\
+PennyLane        & PennyLane 0.44.1 \\
+scikit-learn     & scikit-learn 1.4.x / NumPy 1.26.x \\
+Statevector Sim  & \texttt{qml.default.qubit} \\
+Density Sim      & \texttt{qml.default.mixed} \\
+Verified Commit  & \texttt{23c89d350e5135080a8f4f7f012c4e98d1ee3f82} (\texttt{reproduction-verified-23c89d3}) \\
+\bottomrule
+\end{tabular}
+\end{table}

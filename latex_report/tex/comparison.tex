@@ -1,0 +1,88 @@
+% comparison.tex - Comprehensive Comparative Analysis and Evidence Map
+\section{Comparative Analysis: Paper vs.\ Reproduction vs.\ Audit}
+\label{sec:comparison-matrix}
+
+\subsection{Methodological Dimension-by-Dimension Comparison}
+\Cref{tab:master-comparison} catalogs the detailed comparative assessment across all thirty-two structural facets of the Daga et al.\ (2026) framework. Every cell is traceable to either the paper text, released source at commit \texttt{23c89d3}, or our audit artifacts.
+
+\begin{longtable}{p{3.2cm}p{4.2cm}p{4.5cm}p{2.8cm}}
+\caption{Master comparative matrix between published claims, released implementation, and audit findings.}\label{tab:master-comparison}\\
+\toprule
+\textbf{Component} & \textbf{Published Description} & \textbf{Released Implementation} & \textbf{Audit Finding \& Status} \\
+\midrule
+\endfirsthead
+\multicolumn{4}{c}{\small\itshape (Table~\ref{tab:master-comparison} continued)}\\
+\toprule
+\textbf{Component} & \textbf{Published Description} & \textbf{Released Implementation} & \textbf{Audit Finding \& Status} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+
+\textbf{Dataset Scope} & Evaluated on WDBC, Parkinson's, and Diabetes & Scripts provided for all 3 datasets & Restricted to \wdbc\ ($N=569, D=30$). \statusv \\
+\midrule
+\textbf{PCA Dimensionality} & Reduces input to $d=8$ principal components & \texttt{PCA(n\_components=8, random\_state=42)} & Retains $92.598\%$ variance. Exact match. \statusv \\
+\midrule
+\textbf{Angular Rescaling} & Features mapped to $[0,\pi]$ & \texttt{MinMaxScaler(feature\_range=(0, pi))} & Validated on all 8 components. \statusv \\
+\midrule
+\textbf{Clean Angle Map} & 8-qubit rotation circuit & \texttt{AngleEmbedding(wires=range(8))} ($R_X$) & Verified unitary fidelity overlap. \statusv \\
+\midrule
+\textbf{Clean ZZ Feature Map} & Entangling IQP feature map & \texttt{IQPEmbedding} ($K_8$, all-to-all, 28 pairs) & Complete graph confirmed; 56 CNOTs. \statusv \\
+\midrule
+\textbf{Clean Amplitude Map} & 3-qubit amplitude encoding & \texttt{AmplitudeEmbedding(normalize=True)} & Exact state overlap matched. \statusv \\
+\midrule
+\textbf{Gram Matrices} & $N \times N$ precomputed kernels & Precomputed $569 \times 569$ \texttt{.npy} arrays & Symmetric ($0.00\mathrm{e}{+}00$ error), PSD. \statusv \\
+\midrule
+\textbf{Table 8 Metrics} & Published in Table 8 & Output from \texttt{quantum\_clinical\_github.py} & Exact match to 3 decimal places. \statusv \\
+\midrule
+\textbf{OOF Stacking Leakage} & Leakage-free meta-features & 5-fold inner CV generates OOF & Leakage barrier verified. \statusv \\
+\midrule
+\textbf{Model Selection} & Selected via pairwise McNemar test & Hardcoded at Line 787 of primary script & Static list; script not called. \statusd \\
+\midrule
+\textbf{Quartet Optimality} & Optimal subset selected & Quartet: Amp QSVM/QKNN, ZZ QSVM, Ang QKNN & QSVM Angle ranks \#1 in 10/10 folds. \statusd \\
+\midrule
+\textbf{VQC Gradient Autodiff} & Trained with Adam optimizer & Python list subtraction in loss function & Autograd severed; $\|\nabla\|_2 = 0.0$. \statusd \\
+\midrule
+\textbf{VQC Graph Preservation} & Differentiable loss & List comprehension breaks graph & Corrected \texttt{pnp.stack}: $\|\nabla\|_2 = 0.1018$. \statusd \\
+\midrule
+\textbf{Noisy ZZ Topology} & Noisy simulation of ZZ map & Replaced $K_8$ complete with $P_8$ 1D chain & Entanglement reduced by $75\%$. \statusd \\
+\midrule
+\textbf{Noisy Angle Gate} & Noisy Angle kernel & Uses $R_Y$ instead of clean $R_X$ & Mixed-state equivalence on depol. \statusd \\
+\midrule
+\textbf{NISQ Resilience Claim} & Robust to hardware noise & Meta-learner drives ZZ weight $|\beta| < 0.001$ & ZZ collapsed; ensemble survives via pruning. \statuss \\
+\midrule
+\textbf{XAI Attribution} & Measures quantum importance & $\mathrm{comp\_imp}[c] = \mathrm{ev}[c] \cdot \sum |\beta_k|$ & Scalar cancels out; $100\%$ PCA eigenvalues. \statusm \\
+\midrule
+\textbf{Multi-Seed Robustness} & Evaluated on single seed (42) & Seed 42 hardcoded & Across 10 seeds, RBF beats Stacking 10/10. \statusstat \\
+\midrule
+\textbf{Holm Testing} & Single pairwise tests & Multiple comparisons unadjusted & Zero quantum advantage survives FWER. \statusstat \\
+\midrule
+\textbf{Fair Classical Baselines}& Default classical models & Standard scikit-learn defaults & Tuned classical RBF reaches $0.9719$. \statusstat \\
+\midrule
+\textbf{Probability Calibration}& Not reported in paper & Calibration scripts available & Raw RBF better calibrated than Stacking. \statuss \\
+\end{longtable}
+
+\subsection{Evidence Strength Categorization}
+\Cref{tab:evidence-strength} summarizes the audit's evidentiary conclusions according to formal reproducible research standards.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Audit evidence strength categorization across all major claims.}
+\label{tab:evidence-strength}
+\begin{tabularx}{\textwidth}{p{6.0cm}p{4.0cm}p{4.2cm}}
+\toprule
+\textbf{Investigated Paper Claim} & \textbf{Audit Classification} & \textbf{Empirical Grounding} \\
+\midrule
+Exact reproduction of Table 8 metrics & \statusv & $549/569$ matched on Seed 42 \\
+Leakage-free out-of-fold stacking & \statusv & Inner 5-fold strictly partitions data \\
+Gram matrix PSD and symmetry & \statusv & $0.00\mathrm{e}{+}00$ symmetry error; min eig $>0$ \\
+Meta-learner downweighting under noise & \statusv & $|\beta_{\mathrm{ZZ}}| < 0.001$ under $5\%$ noise \\
+Dynamic McNemar model selection & \statusd & Hardcoded list at line 787 \\
+Trainable VQC parameter optimization & \statusd & List comprehension severs autodiff \\
+NISQ noise circuit equivalence & \statusd & Entangling CNOT count reduced $56 \to 14$ \\
+Quantum explainability attribution & \statusm & Algebraic scalar cancellation \\
+General quantum superiority on WDBC & \statusstat & RBF beats Stacking 10/10 seeds; Holm $p=1$ \\
+\bottomrule
+\end{tabularx}
+\end{table}

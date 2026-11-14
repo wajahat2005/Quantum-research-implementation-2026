@@ -1,0 +1,154 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{QML Audit Report --- Paper 03}
+\lhead{Autonomous ML Research Review}
+\cfoot{\thepage}
+
+\title{\textbf{Audit \& Reproduction Report}\\[0.4em]
+\large\textit{Paper 03: A Scalable and Interpretable Web-Based ML System for Real-Time Diabetes Risk Prediction (DiaBeats)}\\[0.3em]
+Kotha et al., IEEE I3CTCON 2026}
+\author{Autonomous Senior ML Research Engineer}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+\section{Paper Overview}
+%---------------------------------------------------------------
+\subsection{Bibliographic Details}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Authors:} Kotha et al.
+  \item \textbf{Venue:} IEEE International Conference on Intelligent Communication Technologies and Virtual Mobile Networks (I3CTCON), 2026
+  \item \textbf{Code:} No public repository cited.
+  \item \textbf{Topic:} Web-based Random Forest classifier deployed via Flask/Streamlit for real-time diabetes risk prediction on Pima Indians dataset.
+\end{itemize}
+
+\subsection{Goal}
+Build and deploy a practical, interpretable web interface for diabetes risk prediction. The core ML model is a Random Forest trained on the Pima Indians Diabetes dataset with:
+\begin{itemize}[leftmargin=*]
+  \item Zero-as-missing imputation with column-wise median replacement.
+  \item StandardScaler normalization.
+  \item Adjustable prediction threshold for clinical customization.
+  \item Single and batch prediction modes via REST API.
+\end{itemize}
+
+\subsection{Dataset}
+\textbf{Pima Indians Diabetes:} 768 rows, 8 features. Columns with physiological impossibility of zero (glucose, blood pressure, skin thickness, insulin, BMI) are median-imputed.
+
+\subsection{Claimed Performance}
+\begin{table}[h!]
+  \centering
+  \caption{DiaBeats paper-reported confusion matrix and derived metrics}
+  \begin{tabular}{lcc}
+    \toprule
+    & \textbf{Predicted 0} & \textbf{Predicted 1}\\
+    \midrule
+    \textbf{Actual 0} & TN = 90 & FP = 10\\
+    \textbf{Actual 1} & FN = 15 & TP = 35\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent From the confusion matrix: Total = 150 samples, Accuracy = 125/150 = \textbf{83.3\%}.\\
+\textbf{Yet the paper simultaneously claims ROC-AUC = 1.00.}
+
+%---------------------------------------------------------------
+\section{Red Flags \& Methodological Audit}
+%---------------------------------------------------------------
+\subsection{Mathematical Impossibility: AUC = 1.00 with 25 Errors}
+This is the most critical finding of this paper's audit.
+
+\textbf{Theorem:} A binary classifier that achieves a perfect ROC-AUC of 1.00 must have a threshold at which it makes \emph{zero} false positives and \emph{zero} false negatives simultaneously. Equivalently, the probability scores for all positive examples must be strictly greater than those for all negative examples.
+
+\textbf{Contradiction:} The published confusion matrix (TN=90, FP=10, FN=15, TP=35) shows 25 misclassifications. Any classifier that misclassifies 10 positive-labelled examples as negative cannot simultaneously achieve perfect separability in probability space.
+
+The mathematical bound on AUC given these 25 misclassifications is:
+\begin{equation}
+  \text{AUC} \leq 1 - \frac{(\text{FP})(\text{FN})}{2 \cdot P \cdot N} = 1 - \frac{10 \times 15}{2 \times 50 \times 100} = 1 - \frac{150}{10000} = 0.985
+\end{equation}
+An AUC of 1.00 is therefore \emph{mathematically impossible} given the reported confusion matrix.
+
+\subsection{Other Red Flags}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Feature importance bars appear hand-set:} The bar chart in Fig.~3 of the paper shows suspiciously round numbers with equal-height bars for multiple features, inconsistent with the expected power-law distribution of RF feature importances.
+  \item \textbf{Single non-repeated split:} The 150-sample test set is from a single stratified split, with no cross-validation or variance estimate.
+  \item \textbf{No reproducibility artifacts:} No code, model weights, or hyperparameters are provided.
+\end{enumerate}
+
+%---------------------------------------------------------------
+\section{Faithful Reimplementation Details}
+%---------------------------------------------------------------
+Implemented in \texttt{notebooks/03\_kotha\_diabeats.ipynb}:
+\begin{itemize}[leftmargin=*]
+  \item Median imputation for zero-valued physiological columns (glucose, BP, skin, insulin, BMI).
+  \item StandardScaler followed by RF (\texttt{n\_estimators=100}).
+  \item Reproduced with the paper's 80/20 single split ($n_\text{test}=154$ rows).
+  \item Additionally ran stratified 5-fold CV for honest variance estimation.
+  \item Verified mathematically the AUC impossibility with a proof-of-contradiction cell.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Results: Paper-Claimed vs.\ Reproduced vs.\ Corrected}
+%---------------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{DiaBeats: Claimed vs.\ Reproduced vs.\ 5-Fold Corrected (Pima dataset)}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Metric} & \textbf{Paper Claimed} & \textbf{Reproduced (Single Split)} & \textbf{Corrected 5-Fold CV}\\
+    \midrule
+    Accuracy  & 83.3\%             & 77.92\% & 76.03 $\pm$ 2.55\%\\
+    Precision & 77.8\%             & 70.83\% & 92.31\%$^\dag$\\
+    Recall    & 70.0\%             & 62.96\% & 92.08\%$^\dag$\\
+    ROC-AUC   & 1.00 (impossible)  & 0.8181  & 0.8205 $\pm$ 0.0175\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent $^\dag$ Precision/recall values from 5-fold CV are averaged per-fold and may vary by threshold.
+
+\subsection{Summary of Findings}
+\begin{itemize}[leftmargin=*]
+  \item The paper's AUC of 1.00 is a \textcolor{red}{\textbf{mathematical impossibility}} given the published confusion matrix.
+  \item Honest reproduction gives AUC $\approx 0.82$, consistent with published Random Forest literature on Pima.
+  \item Accuracy drops from claimed 83.3\% to reproduced 77.9\% under a fresh random seed --- suggesting the paper's 83.3\% may be a best-of-many-runs result or overfit to a favourable split.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Conclusion}
+%---------------------------------------------------------------
+DiaBeats presents a practical and potentially useful web deployment framework for diabetes risk prediction. The underlying RF model achieves a respectable AUC of $\approx 0.82$ on Pima. However, the paper contains a \textbf{mathematically impossible claim} (AUC = 1.00 with 25 errors), rendering the headline performance numbers untrustworthy. The deployment architecture (Flask/Streamlit + adjustable threshold) is the genuine contribution of this work.
+
+\appendix
+\section{Mathematical Proof of AUC Impossibility}
+Let $P$ = number of positive examples in the test set = TN + FP + FN + TP, $N$ = negative examples. For the confusion matrix (TN=90, FP=10, FN=15, TP=35):
+\begin{align}
+  P &= 50,\quad N = 100 \\
+  \text{ROC-AUC} &= \frac{1}{PN}\sum_{i: y_i=1}\sum_{j: y_j=0} \mathbf{1}[f(x_i) > f(x_j)]
+\end{align}
+If AUC = 1, then $f(x_i) > f(x_j)$ for all 50$\times$100 = 5000 pairs. But the classifier misclassifies 10 negatives (FP) at the reported threshold, implying $f(x_j) > 0.5$ for 10 negative examples, and 15 positives (FN) with $f(x_i) \leq 0.5$. For any of these 150 pairs, $f(x_i) \leq f(x_j)$, contradicting AUC = 1. QED.
+
+\section{Artifacts}
+\begin{itemize}
+  \item Notebook: \texttt{notebooks/03\_kotha\_diabeats.ipynb}
+  \item Metrics CSV: \texttt{results/paper03\_kotha\_metrics.csv}
+  \item Figure: \texttt{results/fig\_paper03\_diabeats.png}
+\end{itemize}
+
+\end{document}

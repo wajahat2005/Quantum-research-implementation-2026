@@ -1,0 +1,192 @@
+% results.tex - Complete Empirical Evaluation Matrices and Statistical Testing
+\section{Empirical Evaluation Matrices and Benchmark Findings}
+\label{sec:results-matrices}
+
+\subsection{Evaluation Matrix 1: Published vs.\ Reproduced Table 8 Performance}
+\Cref{tab:table8-full-reproduction} provides the comprehensive side-by-side evaluation matrix between the published Table~8 metrics of Daga et al.\ (2026) and our independent reproduction on WDBC under Seed~42 (10-fold Stratified CV).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Published vs.\ Reproduced Table 8 Performance on WDBC ($N=569$, Seed 42). Specificity represents Malignant recall (Class 0), and Recall represents Benign recall (Class 1). Source: \texttt{results/metrics/breast\_cancer\_table\_8\_comparison.csv}.}
+\label{tab:table8-full-reproduction}
+\begin{tabularx}{\textwidth}{lcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Classifier Pipeline}} & \multicolumn{2}{c}{\textbf{Accuracy}} & \multicolumn{2}{c}{\textbf{Specificity}} & \multicolumn{2}{c}{\textbf{Recall}} & \multicolumn{2}{c}{\textbf{Precision}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+& \textbf{Pub} & \textbf{Rep} & \textbf{Pub} & \textbf{Rep} & \textbf{Pub} & \textbf{Rep} & \textbf{Pub} & \textbf{Rep} \\
+\midrule
+Classical RBF-SVM     & 0.970 & \textbf{0.970} & 0.948 & \textbf{0.948} & 0.983 & \textbf{0.983} & 0.969 & \textbf{0.969} \\
+QSVM (Angle)          & 0.964 & \textbf{0.964} & 0.919 & \textbf{0.919} & 0.991 & \textbf{0.991} & 0.954 & \textbf{0.954} \\
+QSVM (ZZ Map)         & 0.959 & \textbf{0.959} & 0.939 & \textbf{0.939} & 0.971 & \textbf{0.971} & 0.964 & \textbf{0.964} \\
+QSVM (Amplitude)      & 0.954 & \textbf{0.954} & 0.881 & \textbf{0.881} & 0.997 & \textbf{0.997} & 0.934 & \textbf{0.934} \\
+QKNN (Angle)          & 0.958 & \textbf{0.958} & 0.915 & \textbf{0.915} & 0.983 & \textbf{0.983} & 0.951 & \textbf{0.951} \\
+QKNN (ZZ Map)         & 0.949 & \textbf{0.949} & 0.886 & \textbf{0.886} & 0.986 & \textbf{0.986} & 0.936 & \textbf{0.936} \\
+QKNN (Amplitude)      & 0.952 & \textbf{0.952} & 0.896 & \textbf{0.896} & 0.986 & \textbf{0.986} & 0.941 & \textbf{0.941} \\
+Hard Voting Ensemble  & 0.961 & \textbf{0.961} & 0.919 & \textbf{0.919} & 0.986 & \textbf{0.986} & 0.954 & \textbf{0.954} \\
+\textbf{OOF Stacking} & \textbf{0.964} & \textbf{0.964} & \textbf{0.943} & \textbf{0.943} & \textbf{0.977} & \textbf{0.977} & \textbf{0.967} & \textbf{0.967} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Evaluation Matrix 2: Complete 10-Fold Out-of-Fold Confusion Matrices}
+\Cref{tab:confusion-matrices-full} reports the cumulative 10-fold confusion matrix counts ($N=569$, $212$ Malignant, $357$ Benign).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Full cumulative 10-fold confusion matrices on WDBC ($N=569$). Source: \texttt{results/confusion\_matrices/breast\_cancer\_confusion\_matrices.json}.}
+\label{tab:confusion-matrices-full}
+\begin{tabularx}{\textwidth}{lccccc}
+\toprule
+\textbf{Evaluated Model} & \textbf{TN (Malignant)} & \textbf{FP} & \textbf{FN} & \textbf{TP (Benign)} & \textbf{Total Correct} \\
+\midrule
+Classical RBF-SVM     & 201 & 11 & 6  & 351 & 552 / 569 ($0.9701$) \\
+QSVM (Angle)          & 195 & 17 & 3  & 354 & 549 / 569 ($0.9649$) \\
+QSVM (ZZ Map)         & 199 & 13 & 10 & 347 & 546 / 569 ($0.9596$) \\
+QSVM (Amplitude)      & 187 & 25 & 1  & 356 & 543 / 569 ($0.9543$) \\
+QKNN (Angle)          & 194 & 18 & 6  & 351 & 545 / 569 ($0.9578$) \\
+QKNN (ZZ Map)         & 188 & 24 & 5  & 352 & 540 / 569 ($0.9490$) \\
+QKNN (Amplitude)      & 190 & 22 & 5  & 352 & 542 / 569 ($0.9525$) \\
+Hard Voting Ensemble  & 195 & 17 & 5  & 352 & 547 / 569 ($0.9613$) \\
+\textbf{OOF Stacking} & \textbf{200} & \textbf{12} & \textbf{8} & \textbf{349} & \textbf{549 / 569 ($0.9649$)} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Evaluation Matrix 3: Multi-Seed Robustness Summary (10 Seeds)}
+\Cref{tab:multi-seed-summary} presents the distribution of performance across 10 random seeds ($\{0, 1, 2, 3, 4, 5, 6, 7, 8, 42\}$).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Cross-validation accuracy and metric dispersion across 10 independent stratified splits. Source: \texttt{audit\_results/seed\_robustness/seed\_summary.csv}.}
+\label{tab:multi-seed-summary}
+\begin{tabularx}{\textwidth}{lccccc}
+\toprule
+\textbf{Classifier} & \textbf{Acc Mean $\pm \sigma$} & \textbf{Acc Range [Min, Max]} & \textbf{Precision} & \textbf{Recall} & \textbf{Specificity} \\
+\midrule
+Classical RBF-SVM     & \textbf{0.9731} $\pm$ 0.0017 & [0.9701, 0.9754] & 0.9703 $\pm$ 0.0029 & 0.9874 $\pm$ 0.0042 & \textbf{0.9491} $\pm$ 0.0054 \\
+QSVM (Angle)          & 0.9687 $\pm$ 0.0023 & [0.9649, 0.9736] & 0.9576 $\pm$ 0.0030 & \textbf{0.9941} $\pm$ 0.0009 & 0.9259 $\pm$ 0.0055 \\
+QSVM (ZZ Map)         & 0.9608 $\pm$ 0.0026 & [0.9561, 0.9649] & 0.9637 $\pm$ 0.0032 & 0.9742 $\pm$ 0.0029 & 0.9382 $\pm$ 0.0056 \\
+QSVM (Amplitude)      & 0.9552 $\pm$ 0.0022 & [0.9525, 0.9596] & 0.9365 $\pm$ 0.0027 & 0.9961 $\pm$ 0.0014 & 0.8863 $\pm$ 0.0052 \\
+QKNN (Angle)          & 0.9564 $\pm$ 0.0032 & [0.9508, 0.9613] & 0.9504 $\pm$ 0.0033 & 0.9818 $\pm$ 0.0027 & 0.9137 $\pm$ 0.0059 \\
+QKNN (ZZ Map)         & 0.9489 $\pm$ 0.0027 & [0.9438, 0.9525] & 0.9359 $\pm$ 0.0032 & 0.9860 $\pm$ 0.0023 & 0.8863 $\pm$ 0.0061 \\
+QKNN (Amplitude)      & 0.9480 $\pm$ 0.0032 & [0.9420, 0.9525] & 0.9377 $\pm$ 0.0031 & 0.9824 $\pm$ 0.0040 & 0.8901 $\pm$ 0.0059 \\
+Hard Voting Ensemble  & 0.9638 $\pm$ 0.0028 & [0.9613, 0.9701] & 0.9563 $\pm$ 0.0034 & 0.9874 $\pm$ 0.0020 & 0.9241 $\pm$ 0.0061 \\
+\textbf{OOF Stacking} & \textbf{0.9670} $\pm$ 0.0031 & [0.9596, 0.9701] & 0.9651 $\pm$ 0.0022 & 0.9829 $\pm$ 0.0048 & 0.9401 $\pm$ 0.0039 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Evaluation Matrix 4: Classical Fairness Comparison}
+\Cref{tab:classical-fairness-full} presents the comparative evaluation of eight classical baselines (released defaults vs.\ nested tuned) against Quantum Stacking ($549/569 = 0.9649$).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Classical fairness comparison on WDBC ($N=569$). Tuned hyperparameter search used nested CV. Source: \texttt{audit\_results/classical\_fairness/classical\_fairness\_comparison.csv}.}
+\label{tab:classical-fairness-full}
+\begin{tabularx}{\textwidth}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{$\Delta$ vs.\ Quantum} & \textbf{$95\%$ CI of $\Delta$} & \textbf{Raw $p$} & \textbf{Holm $p_{\mathrm{adj}}$} \\
+\midrule
+Released RBF-SVM      & 0.9701 & $+0.0053$ & $[-0.0070, +0.0176]$ & 0.5488 & 1.0000 \\
+Tuned RBF-SVM         & 0.9719 & $+0.0070$ & $[-0.0053, +0.0211]$ & 0.4240 & 1.0000 \\
+Released RF           & 0.9473 & $-0.0176$ & $[-0.0351, -0.0035]$ & 0.0639 & 1.0000 \\
+Tuned RF              & 0.9455 & $-0.0193$ & $[-0.0369, -0.0053]$ & 0.0347 & 0.2775 \\
+Released XGBoost      & 0.9684 & $+0.0035$ & $[-0.0123, +0.0193]$ & 0.8318 & 1.0000 \\
+Tuned XGBoost         & 0.9649 & $0.0000$  & $[-0.0176, +0.0158]$ & 1.0000 & 1.0000 \\
+Released Cls Stacking & 0.9666 & $+0.0018$ & $[-0.0070, +0.0105]$ & 1.0000 & 1.0000 \\
+Tuned Cls Stacking    & 0.9684 & $+0.0035$ & $[-0.0053, +0.0123]$ & 0.6875 & 1.0000 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Evaluation Matrix 5: Holm-Bonferroni Hypothesis Testing (32 Hypotheses)}
+\Cref{tab:holm-parametric-key} and \Cref{tab:holm-bootstrap-key} summarize the 32 pairwise hypothesis tests comparing all quantum pipelines against Classical RBF-SVM across Accuracy, Precision, Recall, and Specificity.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Key Holm-Bonferroni results for parametric tests. Source: \texttt{audit\_results/statistics/holm\_rbf\_32\_tests.csv}.}
+\label{tab:holm-parametric-key}
+\begin{tabularx}{\textwidth}{llcccc}
+\toprule
+\textbf{Model} & \textbf{Metric} & \textbf{Raw $p$-Value} & \textbf{Holm $p_{\mathrm{adj}}$} & \textbf{Direction vs.\ RBF} & \textbf{Significant?} \\
+\midrule
+QKNN (Amplitude) & Specificity & \textbf{0.0011} & \textbf{0.0352} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QKNN (Amplitude) & Precision   & 0.0017 & 0.0527 & Inferior to RBF & No \\
+QKNN (ZZ Map)    & Precision   & 0.0032 & 0.0960 & Inferior to RBF & No \\
+QKNN (ZZ Map)    & Specificity & 0.0037 & 0.1073 & Inferior to RBF & No \\
+QSVM (Amplitude) & Precision   & 0.0043 & 0.1204 & Inferior to RBF & No \\
+\midrule
+OOF Stacking & Accuracy    & 0.3917 & 1.0000 & Tied / Equivalent & No \\
+OOF Stacking & Precision   & 0.6176 & 1.0000 & Tied / Equivalent & No \\
+OOF Stacking & Recall      & 0.6193 & 1.0000 & Tied / Equivalent & No \\
+OOF Stacking & Specificity & 0.6896 & 1.0000 & Tied / Equivalent & No \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Key Holm-Bonferroni results for bootstrap tests. Source: \texttt{audit\_results/statistics/holm\_rbf\_bootstrap\_32\_tests.csv}.}
+\label{tab:holm-bootstrap-key}
+\begin{tabularx}{\textwidth}{llcccc}
+\toprule
+\textbf{Model} & \textbf{Metric} & \textbf{Raw $p$-Value} & \textbf{Holm $p_{\mathrm{adj}}$} & \textbf{Direction vs.\ RBF} & \textbf{Significant?} \\
+\midrule
+QSVM (Amplitude) & Precision   & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QSVM (Amplitude) & Specificity & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QKNN (Angle)     & Precision   & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QKNN (Angle)     & Specificity & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QKNN (ZZ Map)    & Precision   & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+QKNN (ZZ Map)    & Specificity & 0.0000 & \textbf{0.0000} & Inferior to RBF & \textbf{Yes (Worse)} \\
+\midrule
+OOF Stacking & All 4 Metrics & $\ge 0.4600$ & 1.0000 & No Difference & No \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All 6 statistically significant bootstrap comparisons demonstrate that the quantum models are \textbf{statistically inferior} to Classical RBF. Zero quantum advantages survive Holm adjustment.
+
+\subsection{Evaluation Matrix 6: Probability Calibration Metrics}
+\Cref{tab:calibration-summary} summarizes the calibration performance.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Probability calibration metrics on WDBC ($N=569$). Source: \texttt{audit\_results/calibration/calibration\_raw\_results.csv} and \texttt{calibration\_platt\_results.csv}.}
+\label{tab:calibration-summary}
+\begin{tabularx}{\textwidth}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Raw ECE} & \textbf{Raw Brier Score} & \textbf{Platt-Scaled ECE} & \textbf{Platt Brier Score} \\
+\midrule
+Classical RBF-SVM     & \textbf{0.0173} & \textbf{0.0233} & 0.0419 & 0.0260 \\
+OOF Quantum Stacking  & 0.0332 & 0.0299 & \textbf{0.0267} & 0.0290 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Evaluation Matrix 7: XAI Attribution Consistency}
+\Cref{tab:xai-consistency-summary} confirms the stability of base model attributions across $|\beta|$, SHAP, and permutation importance.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Base model attribution rankings across three XAI frameworks. Source: \texttt{audit\_results/xai/xai\_stability\_summary.csv}.}
+\label{tab:xai-consistency-summary}
+\begin{tabularx}{\textwidth}{lcccc}
+\toprule
+\textbf{Base Model} & \textbf{Mean $|\beta|$} & \textbf{Mean SHAP} & \textbf{Permutation Importance} & \textbf{Attribution Rank} \\
+\midrule
+QSVM (ZZ Map)    & $2.590 \pm 0.283$ & $1.175 \pm 0.134$ & $0.0988 \pm 0.1032$ & \textbf{Rank 1} \\
+QSVM (Amplitude) & $2.165 \pm 0.317$ & $0.936 \pm 0.131$ & $0.0067 \pm 0.0066$ & \textbf{Rank 2} \\
+QKNN (Angle)     & $1.482 \pm 0.364$ & $0.658 \pm 0.166$ & $0.0051 \pm 0.0074$ & \textbf{Rank 3} \\
+QKNN (Amplitude) & $1.164 \pm 0.373$ & $0.515 \pm 0.174$ & $0.0018 \pm 0.0066$ & \textbf{Rank 4} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+All three methods produce identical ordinal rankings ($ZZ\text{-QSVM} > \text{Amp-QSVM} > \text{Ang-QKNN} > \text{Amp-QKNN}$).

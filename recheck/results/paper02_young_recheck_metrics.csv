@@ -1,0 +1,5 @@
+experiment,evaluation_set,accuracy,balanced_accuracy,f1_score,roc_auc,precision,recall,prevalence,notes
+A_Real_Patients_No_Augmentation,Real_Patients (N=768),0.7682291666666666,0.7319701492537314,0.6482213438735178,0.8264402985074626,0.6890756302521008,0.6119402985074627,34.89583333333333,Honest clinical evaluation on real patients without GMM augmentation
+B_Global_GMM_Augmentation_Full,Augmented Cohort (N=2768),0.8977601156069365,0.7567566137566137,0.9400042399830401,0.9295753968253968,0.9052674561045324,0.9775132275132276,81.9364161849711,"Paper reported F1=0.8933, AUC=0.8699 on augmented cohort"
+B_Global_GMM_Augmentation_Real_Slice,Real Patients Sliced (N=768),0.65234375,0.7027014925373134,0.635743519781719,0.8104179104477612,0.5010752688172043,0.8694029850746269,34.89583333333333,Real patient performance when trained on global GMM data
+C_In_Fold_GMM_Augmentation,Real_Patients (N=768),0.6497395833333334,0.6989701492537314,0.6320109439124487,0.8056492537313433,0.49892008639308855,0.8619402985074627,34.89583333333333,Strict leakage-free in-fold synthetic augmentation

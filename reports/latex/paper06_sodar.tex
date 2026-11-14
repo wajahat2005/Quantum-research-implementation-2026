@@ -1,0 +1,152 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{QML Audit Report --- Paper 06}
+\lhead{Autonomous ML Research Review}
+\cfoot{\thepage}
+
+\title{\textbf{Audit \& Reproduction Report}\\[0.4em]
+\large\textit{Paper 06: Encrypted Network Traffic Analysis using Quantum Machine Learning}\\[0.3em]
+Sodar et al., \textit{EPJ Quantum Technology} 13:17 (2026)}
+\author{Autonomous Senior ML Research Engineer}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+\section{Paper Overview}
+%---------------------------------------------------------------
+\subsection{Bibliographic Details}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Authors:} Sodar et al.
+  \item \textbf{Venue:} EPJ Quantum Technology, Vol.~13, Article 17 (2026)
+  \item \textbf{DOI:} 10.1140/epjqt/s40507-026-00234-5
+  \item \textbf{Topic:} Quantum machine learning applied to encrypted network traffic classification (URL classification and intrusion detection).
+\end{itemize}
+
+\subsection{Goal}
+Apply quantum encoding methods to network traffic features for binary classification of encrypted URLs (malicious vs.\ benign) and intrusion detection events. Compare:
+\begin{itemize}[leftmargin=*]
+  \item Quantum encoding: Angle encoding and amplitude encoding (PennyLane).
+  \item Quantum classifiers: QSVM (fidelity kernel), QKNN ($k=7$, fidelity distance).
+  \item Hybrid classifiers: Quantum circuit features $\to$ classical SVM and KNN.
+\end{itemize}
+
+\subsection{Datasets (Unavailable)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{ISCX-URL2016:} URL-based web traffic dataset (restricted access).
+  \item \textbf{ISCXIDS2012:} Network intrusion detection dataset (restricted access).
+\end{itemize}
+\textbf{Dataset substitution:} We proxy with Breast Cancer Wisconsin and Parkinson's disease datasets (both publicly available), demonstrating the quantum encoding methods on structured tabular data of similar dimensionality. This substitution is explicitly declared in our notebook.
+
+\subsection{Quantum Methods}
+\paragraph{Angle Encoding (4 qubits, 4 features):}
+\begin{equation}
+  |\phi_\theta(x)\rangle = \bigotimes_{k=1}^{4} R_Y(\theta_k x_k)|0\rangle
+\end{equation}
+
+\paragraph{Amplitude Encoding (2 qubits, 4-dim normalized vector):}
+\begin{equation}
+  |\phi_A(x)\rangle = \sum_{k=0}^{3} \frac{x_k}{\|x\|_2}|k\rangle
+\end{equation}
+
+\paragraph{Fidelity Kernel:}
+\begin{equation}
+  K(x_i, x_j) = |\langle\phi(x_i)|\phi(x_j)\rangle|^2
+\end{equation}
+
+\paragraph{QKNN Fidelity Distance:}
+\begin{equation}
+  d(x_i, x_j) = 1 - K(x_i, x_j)
+\end{equation}
+
+%---------------------------------------------------------------
+\section{Red Flags \& Methodological Audit}
+%---------------------------------------------------------------
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Single train/test split:} No variance estimates are reported. A single 70/30 split on network data with temporal structure may be systematically biased.
+  \item \textbf{No undersampling-before-split verification:} The paper undersamples the majority class \emph{before} splitting. If undersampling is applied to the full dataset before split, the test-set class distribution is altered, inflating recall for the minority class.
+  \item \textbf{Inaccessible datasets:} ISCX-URL2016 requires institutional access; ISCXIDS2012 has restricted download. Results cannot be independently verified.
+  \item \textbf{4-qubit limitation:} With 4-qubit angle encoding, only 4 features can be encoded. Network traffic typically has 20--80 features. The paper does not discuss how feature selection for quantum encoding was performed, raising questions about cherry-picking.
+  \item \textbf{Quantum kernel tractability at scale:} Computing $n^2$ quantum kernel entries for network traffic datasets with tens of thousands of samples is computationally infeasible with statevector simulation. The paper does not state the simulation backend or sample sizes used.
+\end{enumerate}
+
+%---------------------------------------------------------------
+\section{Faithful Reimplementation Details}
+%---------------------------------------------------------------
+Implemented in \texttt{notebooks/06\_sodar\_traffic\_qml.ipynb} using substitute datasets (200-sample subsample):
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Angle Encoding QSVM:} 4-qubit RY encoding + fidelity kernel matrix via \texttt{qml.kernels.kernel\_matrix}; \texttt{SVC(kernel='precomputed')}.
+  \item \textbf{Amplitude Encoding QSVM:} AmplitudeEmbedding on normalized 4-dim feature vector; 2-qubit circuit; fidelity kernel.
+  \item \textbf{QKNN ($k=7$):} Fidelity distance matrix computed from quantum kernel; KNN classification using distance matrix.
+  \item \textbf{Classical baselines:} RBF-SVM, KNN($k=7$).
+  \item \textbf{Hybrid QSVM:} Pauli-Z expectation values from angle-encoded circuit used as features for classical SVM.
+  \item \textbf{Validation:} Repeated 5-fold stratified CV (all preprocessing inside folds, no leakage).
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Results}
+%---------------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{Quantum vs.\ classical comparison (Breast Cancer + Parkinson's proxy, 5-fold CV)}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Method} & \multicolumn{2}{c}{\textbf{Breast Cancer}} & \multicolumn{2}{c}{\textbf{Parkinson's}}\\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+    & \textbf{Accuracy} & \textbf{F1-Score} & \textbf{Accuracy} & \textbf{F1-Score}\\
+    \midrule
+    Classical RBF-SVM     & 93.75 $\pm$ 3.95\% & 0.9375 & 82.50 $\pm$ 2.50\% & 0.7924\\
+    Classical KNN ($k=7$) & 92.50 $\pm$ 4.68\% & 0.9249 & 82.50 $\pm$ 4.68\% & 0.8083\\
+    QSVM (Angle)          & 91.17 $\pm$ 4.96\% & 0.9113 & 82.50 $\pm$ 4.68\% & 0.8011\\
+    QSVM (Amplitude)      & 64.67 $\pm$ 5.87\% & 0.5534 & 75.00 $\pm$ 0.00\% & 0.6429\\
+    QKNN (Angle, $k=7$)   & 91.17 $\pm$ 3.00\% & 0.9111 & 78.75 $\pm$ 3.06\% & 0.7689\\
+    QKNN (Amp, $k=7$)     & 67.08 $\pm$ 7.26\% & 0.6358 & 73.75 $\pm$ 9.19\% & 0.7228\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent Exact values from notebook execution are recorded in \texttt{results/paper06\_sodar\_metrics.csv}.
+
+%---------------------------------------------------------------
+\section{Discussion}
+%---------------------------------------------------------------
+The Sodar et al.\ paper demonstrates a technically sound application of quantum kernel methods to a network security classification problem. The choice of quantum encoding (angle vs.\ amplitude) and the hybrid approach are methodologically reasonable.
+
+However, the absence of:
+\begin{itemize}[leftmargin=*]
+  \item Variance estimates (single split only),
+  \item Accessible datasets for reproduction,
+  \item Clarity on undersampling-before-split procedure,
+\end{itemize}
+makes the reported results unverifiable and potentially optimistic. Our proxy-dataset evaluation on publicly available tabular data provides honest estimates of what quantum methods achieve relative to classical baselines at the same scale.
+
+%---------------------------------------------------------------
+\section{Conclusion}
+%---------------------------------------------------------------
+Quantum kernel methods (QSVM, QKNN) with 4-qubit angle/amplitude encoding are implementable and produce results comparable to classical RBF-SVM on small tabular datasets. For network traffic classification at scale ($>$10,000 samples), statevector-simulated quantum kernels are computationally intractable; hardware or approximate kernel methods would be required. The paper's single-split evaluation methodology prevents any statistical conclusion about the superiority of quantum over classical methods.
+
+\appendix
+\section{Artifacts}
+\begin{itemize}
+  \item Notebook: \texttt{notebooks/06\_sodar\_traffic\_qml.ipynb}
+  \item Metrics CSV: \texttt{results/paper06\_sodar\_metrics.csv}
+  \item Figure: \texttt{results/fig\_paper06\_sodar\_qml.png}
+\end{itemize}
+
+\end{document}

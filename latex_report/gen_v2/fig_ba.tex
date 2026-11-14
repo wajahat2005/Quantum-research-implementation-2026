@@ -1,0 +1,14 @@
+\begin{tikzpicture}\begin{groupplot}[group style={group size=2 by 2,horizontal sep=0.5cm,vertical sep=1.7cm,yticklabels at=edge left},xbar,width=0.39\linewidth,height=6.6cm,xmin=0.4,xmax=1.0,/pgf/bar width=4pt,symbolic y coords={RF tuned threshold,Random Forest,Logistic Regression,RBF-SVM ref,Stacking Daga,Angle QSVM,ZZ QSVM tuned width,ZZ QSVM default width,Amplitude QSVM,Hard voting 4 kernels,VQC Kiran,Always majority},ytick=data,y dir=reverse,yticklabel style={font=\tiny},xticklabel style={font=\tiny},title style={font=\small\bfseries},nodes near coords,nodes near coords style={font=\tiny,/pgf/number format/.cd,fixed,precision=2},point meta=x,extra x ticks={0.5},extra x tick labels={},extra x tick style={grid=major,grid style={dashed,gray}},clip=true]
+\nextgroupplot[title={Pima (768 rows)}]
+\addplot[fill=cq,draw=none] coordinates {(0.716,Stacking Daga) (0.711,Angle QSVM) (0.715,ZZ QSVM tuned width) (0.525,ZZ QSVM default width) (0.530,Amplitude QSVM) (0.546,Hard voting 4 kernels) (0.693,VQC Kiran)};
+\addplot[fill=cc,draw=none] coordinates {(0.741,RF tuned threshold) (0.720,Random Forest) (0.726,Logistic Regression) (0.712,RBF-SVM ref) (0.500,Always majority)};
+\nextgroupplot[title={Sylhet (520 rows)}]
+\addplot[fill=cq,draw=none] coordinates {(0.923,Stacking Daga) (0.882,Angle QSVM) (0.848,ZZ QSVM tuned width) (0.653,ZZ QSVM default width) (0.798,Amplitude QSVM) (0.897,Hard voting 4 kernels) (0.736,VQC Kiran)};
+\addplot[fill=cc,draw=none] coordinates {(0.907,RF tuned threshold) (0.925,Random Forest) (0.886,Logistic Regression) (0.923,RBF-SVM ref) (0.500,Always majority)};
+\nextgroupplot[title={CDC (2,000 rows)}]
+\addplot[fill=cq,draw=none] coordinates {(0.558,Stacking Daga) (0.500,Angle QSVM) (0.520,ZZ QSVM tuned width) (0.506,ZZ QSVM default width) (0.500,Amplitude QSVM) (0.500,Hard voting 4 kernels) (0.715,VQC Kiran)};
+\addplot[fill=cc,draw=none] coordinates {(0.721,RF tuned threshold) (0.551,Random Forest) (0.577,Logistic Regression) (0.531,RBF-SVM ref) (0.500,Always majority)};
+\nextgroupplot[title={Hospital 130 (2,000 rows)}]
+\addplot[fill=cq,draw=none] coordinates {(0.500,Stacking Daga) (0.500,Angle QSVM) (0.500,ZZ QSVM tuned width) (0.500,ZZ QSVM default width) (0.500,Amplitude QSVM) (0.500,Hard voting 4 kernels) (0.536,VQC Kiran)};
+\addplot[fill=cc,draw=none] coordinates {(0.538,RF tuned threshold) (0.500,Random Forest) (0.503,Logistic Regression) (0.500,RBF-SVM ref) (0.500,Always majority)};
+\end{groupplot}\end{tikzpicture}

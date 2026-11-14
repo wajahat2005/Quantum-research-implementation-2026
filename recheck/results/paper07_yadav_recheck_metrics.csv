@@ -1,0 +1,8 @@
+Model,Dataset,Accuracy,Sensitivity,Specificity,ROC_AUC,F1_Score
+QSVM (Z-Map),Pima Indians Diabetes,75.78%,54.85%,87.00%,0.8250,61.25%
+QSVM (ZZ-Map default s=1.0),Pima Indians Diabetes,64.97%,0.00%,99.80%,0.5305,0.00%
+QSVM (ZZ-Map tuned),Pima Indians Diabetes,74.74%,52.61%,86.60%,0.7836,59.24%
+QSVM (Pauli-Map),Pima Indians Diabetes,64.97%,6.34%,96.40%,0.5530,11.22%
+Hybrid QSVM+Classical RF,Pima Indians Diabetes,76.17%,54.10%,88.00%,0.8350,61.31%
+Classical RBF-SVM,Pima Indians Diabetes,76.17%,56.34%,86.80%,0.8147,62.27%
+Classical Random Forest,Pima Indians Diabetes,75.78%,51.87%,88.60%,0.8333,59.91%

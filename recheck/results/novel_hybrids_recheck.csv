@@ -1,0 +1,7 @@
+Model,Dataset,Accuracy,Balanced_Acc,Sensitivity,Specificity,ROC_AUC,F1_Score,Brier_Score,t_stat_vs_LightGBM,p_val_vs_LightGBM
+Tuned Classical LightGBM,Pima Indians Diabetes,76.30%,72.36%,59.33%,85.40%,0.8165,63.60%,0.1663,0.000,1.0000
+Tuned Classical Random Forest,Pima Indians Diabetes,76.69%,72.14%,57.09%,87.20%,0.8285,63.09%,0.1601,0.191,0.8581
+Classical RBF-SVM,Pima Indians Diabetes,76.17%,71.57%,56.34%,86.80%,0.8147,62.27%,0.1660,-0.086,0.9354
+Angle-QSVM,Pima Indians Diabetes,75.52%,70.64%,54.48%,86.80%,0.8255,60.83%,0.1612,-0.503,0.6411
+Classical Stacking (LightGBM + RF + RBF-SVM),Pima Indians Diabetes,76.69%,72.23%,57.46%,87.00%,0.8271,63.24%,0.1597,0.216,0.8393
+Quantum-Classical Stacking (LightGBM + RF + Angle-QSVM),Pima Indians Diabetes,76.43%,71.77%,56.34%,87.20%,0.8304,62.53%,0.1582,0.079,0.9408

@@ -1,0 +1,118 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+\title{\textbf{Independent Scientific Recomputation and Methodological Audit of Eight Clinical AI and Quantum Kernel Studies in Diabetes}}
+\author{Independent Verification and Replication Suite \\ Senior ML Research Engineer}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present an autonomous, end-to-end scientific recomputation of eight published studies in clinical machine learning and quantum kernel methods for diabetes. Purging all non-diabetes cohorts (breast cancer, Parkinson's, network traffic, proprietary audio), every metric is derived from clean executions across four clinical benchmarks: Pima Indians ($N=768$), Sylhet Early Stage ($N=520$), CDC BRFSS ($N=253,680$), and UCI 130-Hospitals ($N=101,766$). We prove that published headline claims of 100\% AUC (DiaBeats) and 99.7\% accuracy (HQCAN) are mathematically impossible under their own published confusion matrices and text error rates. We identify data leakage bugs in published repositories (global Gram pre-computation, pre-split GMM oversampling, and duplicate row memorization in Sylhet). Multi-dataset benchmarking with Nadeau-Bengio corrected resampled $t$-tests and Holm-Bonferroni corrections confirms that quantum kernels provide no statistically significant advantage over classical gradient boosting and RBF-SVM baselines.
+\end{abstract}
+
+\section{Executive Summary}
+All reported values were derived from clean kernel executions of notebooks R00 through R14. Key findings include:
+\begin{enumerate}
+\item \textbf{Mathematical Impossibilities}: Kotha et al. reported $\text{AUC}=1.00$ with 25 classification errors ($15\text{ FN}, 10\text{ FP}$), mathematically bounding $\text{AUC}_{\max} \le 0.9700$. Kiran et al. reported $99.7\%$ accuracy while explicitly stating a $4\%$ error rate ($\le 96.0\%$ accuracy).
+\item \textbf{Synthetic Oversampling Distortion}: Young's high F1 scores ($0.940$) on augmented Pima are driven by class-prior distortion (shifting prevalence to $81.9\%$). On real patients, precision drops to $50.1\%$.
+\item \textbf{Sylhet Duplication Leakage}: Sylhet UCI 529 contains 269 duplicate rows across 251 unique profiles. Under leakage-free GroupKFold, Random Forest accuracy drops from $98.08\%$ to $85.77\%$.
+\item \textbf{Entanglement Degradation}: ZZ-feature maps and multi-qubit entanglement systematically degrade classification accuracy ($65.76\%$ vs $76.17\%$ classical RBF-SVM on Pima).
+\end{enumerate}
+
+\section{Cross-Dataset Benchmark Grid}
+Table 1 presents the multi-model benchmark across all four clinical diabetes cohorts under leakage-free cross-validation.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Dataset} & \textbf{Model} & \textbf{Acc} & \textbf{Sens} & \textbf{Spec} & \textbf{AUC} & \textbf{F1} & \textbf{Holm $p$} \\
+\midrule
+D1\_Pima & Classical Logistic Regression & 77.5\% & 57.1\% & 88.4\% & 0.828 & 63.9\% & 0.718 \\
+D1\_Pima & Classical Random Forest & 76.7\% & 57.1\% & 87.2\% & 0.828 & 63.1\% & 1.000 \\
+D1\_Pima & Classical LightGBM & 73.4\% & 57.1\% & 82.2\% & 0.805 & 60.0\% & 0.463 \\
+D1\_Pima & Classical RBF-SVM & 76.2\% & 56.3\% & 86.8\% & 0.815 & 62.3\% & 1.000 \\
+D1\_Pima & Angle-QSVM & 75.5\% & 54.5\% & 86.8\% & 0.826 & 60.8\% & 1.000 \\
+D1\_Pima & Repaired Amplitude-QSVM & 64.5\% & 14.2\% & 91.4\% & 0.650 & 21.8\% & 0.0338 \\
+D1\_Pima & Unentangled Z-QSVM & 75.8\% & 54.9\% & 87.0\% & 0.825 & 61.3\% & 1.000 \\
+D1\_Pima & Entangled ZZ-QSVM & 65.8\% & 3.4\% & 99.2\% & 0.558 & 6.4\% & 0.0159 \\
+D1\_Pima & Classical Stacking (RBF+LR+RF) & 76.2\% & 55.6\% & 87.2\% & 0.834 & 62.0\% & 1.000 \\
+D1\_Pima & Adaptive Quantum+Classical Stacking & 76.6\% & 56.3\% & 87.4\% & 0.832 & 62.7\% & 1.000 \\
+D2\_Sylhet\_Grouped & Classical Logistic Regression & 89.6\% & 93.4\% & 83.5\% & 0.957 & 91.7\% & 0.665 \\
+D2\_Sylhet\_Grouped & Classical Random Forest & 93.1\% & 94.4\% & 91.0\% & 0.968 & 94.4\% & 1.000 \\
+D2\_Sylhet\_Grouped & Classical LightGBM & 90.0\% & 90.6\% & 89.0\% & 0.961 & 91.8\% & 1.000 \\
+D2\_Sylhet\_Grouped & Classical RBF-SVM & 93.5\% & 94.4\% & 92.0\% & 0.978 & 94.7\% & 1.000 \\
+D2\_Sylhet\_Grouped & Angle-QSVM & 87.9\% & 91.9\% & 81.5\% & 0.901 & 90.3\% & 0.459 \\
+D2\_Sylhet\_Grouped & Repaired Amplitude-QSVM & 81.3\% & 88.8\% & 69.5\% & 0.898 & 85.4\% & 0.129 \\
+D2\_Sylhet\_Grouped & Unentangled Z-QSVM & 87.9\% & 93.4\% & 79.0\% & 0.948 & 90.5\% & 1.000 \\
+D2\_Sylhet\_Grouped & Entangled ZZ-QSVM & 82.9\% & 94.1\% & 65.0\% & 0.910 & 87.1\% & 0.178 \\
+D2\_Sylhet\_Grouped & Classical Stacking (RBF+LR+RF) & 92.5\% & 94.1\% & 90.0\% & 0.974 & 93.9\% & 1.000 \\
+D2\_Sylhet\_Grouped & Adaptive Quantum+Classical Stacking & 91.3\% & 95.6\% & 84.5\% & 0.970 & 93.2\% & 1.000 \\
+D3\_CDC\_BRFSS & Classical Logistic Regression & 85.7\% & 16.5\% & 96.9\% & 0.815 & 24.3\% & 1.000 \\
+D3\_CDC\_BRFSS & Classical Random Forest & 86.0\% & 4.3\% & 99.2\% & 0.817 & 7.9\% & 1.000 \\
+D3\_CDC\_BRFSS & Classical LightGBM & 87.2\% & 30.9\% & 96.3\% & 0.814 & 40.2\% & 1.000 \\
+D3\_CDC\_BRFSS & Classical RBF-SVM & 86.3\% & 7.2\% & 99.1\% & 0.763 & 12.7\% & 1.000 \\
+D3\_CDC\_BRFSS & Angle-QSVM & 86.2\% & 10.1\% & 98.5\% & 0.552 & 16.9\% & 1.000 \\
+D3\_CDC\_BRFSS & Repaired Amplitude-QSVM & 86.3\% & 3.6\% & 99.7\% & 0.683 & 6.8\% & 1.000 \\
+D3\_CDC\_BRFSS & Unentangled Z-QSVM & 86.4\% & 3.6\% & 99.8\% & 0.574 & 6.8\% & 1.000 \\
+D3\_CDC\_BRFSS & Entangled ZZ-QSVM & 85.4\% & 5.8\% & 98.3\% & 0.579 & 9.9\% & 1.000 \\
+D3\_CDC\_BRFSS & Classical Stacking (RBF+LR+RF) & 86.4\% & 13.7\% & 98.1\% & 0.820 & 21.8\% & 1.000 \\
+D3\_CDC\_BRFSS & Adaptive Quantum+Classical Stacking & 86.4\% & 5.8\% & 99.4\% & 0.816 & 10.5\% & 1.000 \\
+D4\_130Hospitals & Classical Logistic Regression & 87.8\% & 0.9\% & 98.8\% & 0.592 & 1.6\% & 1.000 \\
+D4\_130Hospitals & Classical Random Forest & 88.8\% & 0.0\% & 100.0\% & 0.576 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Classical LightGBM & 87.3\% & 0.0\% & 98.3\% & 0.529 & 0.0\% & 0.801 \\
+D4\_130Hospitals & Classical RBF-SVM & 88.8\% & 0.0\% & 100.0\% & 0.505 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Angle-QSVM & 88.8\% & 0.0\% & 100.0\% & 0.451 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Repaired Amplitude-QSVM & 88.8\% & 0.0\% & 100.0\% & 0.493 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Unentangled Z-QSVM & 88.8\% & 0.0\% & 100.0\% & 0.476 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Entangled ZZ-QSVM & 88.4\% & 0.0\% & 99.5\% & 0.465 & 0.0\% & 0.560 \\
+D4\_130Hospitals & Classical Stacking (RBF+LR+RF) & 88.8\% & 0.0\% & 100.0\% & 0.595 & 0.0\% & 1.000 \\
+D4\_130Hospitals & Adaptive Quantum+Classical Stacking & 88.8\% & 0.0\% & 100.0\% & 0.591 & 0.0\% & 1.000 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-dataset multi-model evaluation across four diabetes cohorts. P-values derived via Nadeau-Bengio corrected resampled $t$-test against Classical RBF-SVM baseline with Holm-Bonferroni adjustment.}
+\end{table*}
+
+\section{Discrepancy Log & Verdicts}
+Table 2 summarizes the core discrepancies between prior workspace reports and fresh verified executions.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lllcl}
+\toprule
+\textbf{Audit Section} & \textbf{Old Number} & \textbf{Recheck Number} & \textbf{Verdict} & \textbf{Methodological Explanation} \\
+\midrule
+Scope and Datasets & 569 / 1904 & PURGED (0) & \textbf{CONFIRMED} & Breast cancer and Parkinson datasets strictly purged to enforce pure clinical di... \\
+Paper 01: Upama et al. & 269 & 269 & \textbf{CONFIRMED} & Audit confirmed exactly 251 unique patient profiles out of 520 rows (520 - 251 =... \\
+Paper 01: Upama et al. & 98.08\% & 98.08\% & \textbf{CONFIRMED} & Reproduced exact 98.08\% accuracy under random 80/20 train/test split.... \\
+Paper 01: Upama et al. & 85.77\% & 85.77\% & \textbf{CONFIRMED} & Confirmed accuracy drops from 98.08\% to 85.77\% when duplicate profiles are isola... \\
+Paper 02: Young & 0.9400 & 0.9400 & \textbf{CONFIRMED} & Confirmed high F1 score is driven by artificial prevalence shift (81.9\% syntheti... \\
+Paper 02: Young & 50.11\% & 50.11\% & \textbf{CONFIRMED} & Confirmed GMM oversampling harms precision on real clinical patients due to fals... \\
+Paper 03: Kotha DiaBeats & 1.00 & $\le$ 0.9700 & \textbf{REFUTED} & Published Fig 4 confusion matrix contains 15 FN and 10 FP, mathematically guaran... \\
+Paper 03: Kotha DiaBeats & 76.65\% & 76.65\% & \textbf{CONFIRMED} & Re-executed repeated 5-fold CV yielded 76.65\% accuracy and 0.8240 ROC-AUC.... \\
+Paper 04: Zhang DeSCN-GIF & 88.3\% & NOT\_TESTABLE\_HERE & \textbf{NOT\_TESTABLE} & Proprietary voice dataset is non-diabetes and inaccessible; GIF algorithm evalua... \\
+Paper 05: Kiran HQCAN & 99.7\% & $\le$ 96.0\% (Text) / 64.97\% (Recheck VQC) & \textbf{REFUTED} & Paper explicitly states 4\% error rate in text (bounding accuracy at $\le$96\%); hone... \\
+Paper 05: Kiran HQCAN & 74.73\% & 64.97\% (VQC) vs 74.48\% (Z-Map) & \textbf{CHANGED} & Old run had identical aggregate metrics due to shared discrete baseline; fresh r... \\
+Paper 06: Sodar Traffic QML & 0.00\% & 0.00\% & \textbf{CONFIRMED} & Confirmed raw Amplitude-QSVM collapses to 0.0\% sensitivity due to rank-1 spectra... \\
+Paper 07: Yadav QSVM/QNN & 69.13\% vs 74.73\% & Confirmed across tuning sweep & \textbf{CONFIRMED} & Bandwidth tuning sweep confirmed ZZ entanglement does not outperform unentangled... \\
+Paper 08: Daga Adaptive Stacking & quantum\_clinical\_github.py line 407 & Verified lines 407, 546-548 & \textbf{CONFIRMED} & Confirmed repo computes Gram matrix on full cohort prior to CV slicing, causing ... \\
+Stage 6: Novel Hybrids & 89.17\% & Decision threshold shift (tau=0.35) & \textbf{REFUTED} & Threshold shifting increases sensitivity but destroys specificity (85\% to 62\%) w... \\
+\bottomrule
+\end{tabular}
+\caption{Recheck Discrepancy Log reconciling old workspace claims against fresh recomputation results.}
+\end{table*}
+
+\section{Conclusion}
+Rigorous leakage-free evaluation across clinical diabetes cohorts reveals that current quantum kernel and variational classifiers offer no discriminative advantage over classical baselines, while published claims of near-perfect accuracy are artifacts of leakage, prior distortion, or mathematical contradiction.
+
+\end{document}

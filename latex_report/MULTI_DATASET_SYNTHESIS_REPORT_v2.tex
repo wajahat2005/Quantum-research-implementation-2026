@@ -1,0 +1,210 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.0cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,booktabs,array,longtable,graphicx,xcolor,caption,enumitem,microtype,float,tikz,pgfplots}
+\usepackage[hidelinks]{hyperref}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\pgfplotsset{compat=1.17}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{4pt}
+\definecolor{ok}{RGB}{20,95,50}\definecolor{warn}{RGB}{160,90,0}\definecolor{bad}{RGB}{145,25,25}
+\definecolor{cq}{RGB}{200,90,30}\definecolor{cc}{RGB}{40,100,170}\definecolor{cp}{RGB}{150,150,150}
+\newcommand{\OK}[1]{\textcolor{ok}{\textbf{#1}}}\newcommand{\WARN}[1]{\textcolor{warn}{\textbf{#1}}}\newcommand{\BAD}[1]{\textcolor{bad}{\textbf{#1}}}
+\graphicspath{{gen_v2/}}
+\input{gen_v2/macros.tex}
+\title{\textbf{Do Quantum Models Help Diagnose Diabetes?}\\[0.2em]\large A plain-language report on eight papers, four diabetes datasets, and what we found (version 2, checked against the executed results)}
+\author{Repository: \texttt{Adaptive-Quantum-Kernel-Selection}}
+\date{14 November 2026}
+\begin{document}\maketitle
+\begin{abstract}\noindent
+We re-ran the methods of eight published papers on four diabetes datasets (Pima, Sylhet, CDC survey, Hospital 130), each under two test set-ups: the \emph{paper-style} one (copies the paper, including its weak points) and a \emph{clean} one (no information leaks from test to training). \textbf{Main message:} quantum models never beat a plain classical RBF-SVM; two quantum set-ups are clearly worse; very high published accuracies come from leaks or cannot be reproduced; and on imbalanced data most models only guess ``healthy''. All numbers in tables, charts and in the macros come from the result files of the Colab run (\texttt{executed\_results.zip}), not from typing.
+\end{abstract}
+\tableofcontents\clearpage
+
+\section{The short story}
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{No quantum advantage.} On Pima the plain RBF-SVM gets balanced accuracy \mPimaRBFba; Daga's quantum stacking gets \mPimaStackba and the Angle quantum kernel \mPimaAngleba. These gaps are far smaller than the noise (Holm-corrected $p=1$).
+\item \textbf{Some quantum set-ups are clearly worse.} ZZ kernel with default width: \mPimaZZba (Pima) and \mSylZZba (Sylhet); Amplitude kernel and hard voting on Pima are close to coin-flipping too. Tuning the kernel width removes most of the problem (ZZ tuned: \mSylZZtunedba on Sylhet).
+\item \textbf{Sylhet looks easy only because of duplicates.} Only 251 of 520 rows are distinct. A random split puts the same patient profile in training and test, so scores jump by 3 to 22 points.
+\item \textbf{Uneven groups hide failure.} On CDC, ``always healthy'' already gets \mCdcFloor{} accuracy. The plain RBF-SVM finds only \mCdcRBFrec{} of sick people; most quantum models find none.
+\item \textbf{Several headline claims do not reproduce}: Kiran's 99.7\% (we get \mKiranVQCpaperAcc), Kotha's 83.3\% and AUC 1.00 (we get \mKothaPimaCleanAcc{} accuracy, AUC \mKothaPimaAUC), Daga's ZZ and Amplitude accuracies.
+\item \textbf{Hospital 130 has almost no signal} for any model: best balanced accuracy is only \mHospBestba{} (0.5 = chance).
+\end{enumerate}
+
+\section{What we did}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[font=\scriptsize,node distance=0.5cm,box/.style={draw,rounded corners,align=center,minimum height=0.9cm,text width=2.6cm,fill=#1},arr/.style={-{Stealth},thick}]
+\node[box=cc!15](p){8 papers\\(Upama, Young, Kotha, Zhang,\\Kiran, Sodar, Yadav, Daga)};
+\node[box=cp!25,right=of p](d){4 diabetes datasets\\Pima, Sylhet,\\CDC, Hospital 130};
+\node[box=cq!15,right=of d](r){2 test set-ups\\paper-style\\clean (5-fold $\times$ 3 seeds)};
+\node[box=ok!15,right=of r](o){Results\\accuracy, recall,\\balanced accuracy, tests};
+\draw[arr](p)--(d);\draw[arr](d)--(r);\draw[arr](r)--(o);
+\end{tikzpicture}\caption{The study design. Quantum models are exact numpy simulations (up to 8 qubits), not real hardware.}\end{figure}
+\begin{table}[H]\centering\small\caption{The four datasets (positive class = the group we want to detect).}
+\begin{tabular}{lrll}\toprule Dataset & Rows & Positive class & Note\\\midrule
+Pima & 768 & diabetes & 34.9\% positive\\
+Sylhet & 520 & early-stage diabetes & 61.5\% positive; only 251 distinct rows\\
+CDC & 2,000 & self-reported diabetes/prediabetes & random subsample, 14\% positive\\
+Hospital 130 & 2,000 & readmitted within 30 days & first visit per patient, 8.8\% positive\\\bottomrule\end{tabular}\end{table}
+\textbf{Plain-language glossary.}
+\begin{itemize}[leftmargin=1.5em,nosep]
+\item \emph{Accuracy}: share of correct answers. Misleading when one group is huge.
+\item \emph{Recall}: share of sick people found. \emph{Specificity}: share of healthy people correctly cleared.
+\item \emph{Balanced accuracy} = average of recall and specificity. 0.5 means chance. Our main score.
+\item \emph{Floor}: accuracy of always guessing the biggest group.
+\item \emph{Clean test}: scaling, feature choice and tuning are done only on training data; identical rows never sit on both sides.
+\item \emph{Holm-corrected paired test}: a cautious statistical test against RBF-SVM over 15 folds; ``no clear difference'' means we cannot tell the models apart.
+\end{itemize}
+
+\section{Results}
+\subsection{Every method on every dataset}
+\begin{table}[H]\centering\scriptsize\caption{The eight papers: what each method does and what we ran. Quantum models are simulated on a normal computer.}
+\begin{tabular}{p{1.3cm}p{5.2cm}p{5.0cm}p{3.6cm}}\toprule Paper & Method we copied & Original data & Quantum? \\\midrule
+Upama & Pick the top features with a causal method (DML), then linear SVM, random forest or Angle QSVM & Pima, Sylhet & Angle QSVM only\\
+Young & Ensemble of forest, extra-trees and neural net; adds computer-made sick patients (GMM) & Pima & Quantum-inspired, no real circuit\\
+Kotha & Random forest; single split vs many splits vs cross-validation & Pima & No\\
+Zhang & LightGBM with GIF sample weights when labels are wrong (0--40\%) & Audio data (not used here) & No\\
+Kiran & Small 4-qubit circuit (VQC) vs logistic regression and RBF-SVM on the same 4 inputs & Paper: retinopathy images (not used); earlier audit used Pima & VQC\\
+Sodar & Angle vs Amplitude quantum kernel & URL-traffic security data (not used here) & Angle, Amplitude\\
+Yadav & Z and ZZ quantum kernels; kernel width chosen by inner cross-validation & Breast cancer (WDBC, not used here) & Z, ZZ\\
+Daga & Angle, ZZ, Amplitude kernels, RBF-SVM, stacking and voting & Pima & Angle, ZZ, Amplitude\\\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\scriptsize\caption{Clean test, mean over 5 folds $\times$ 3 seeds. Each cell is balanced accuracy / recall (0.50 / 0.00 = finds no sick people). Last row: accuracy you get by always guessing the biggest group.}
+\input{gen_v2/tab_master.tex}\end{table}
+\textbf{What the table says, paper by paper.}
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Upama:} the quantum (Angle) and classical versions are about equal on Pima (0.72 vs 0.73) and Sylhet (0.90 vs 0.91). On CDC and Hospital 130 the Angle kernel finds nobody.
+\item \textbf{Young:} on real patients the model is fair on Pima (recall 0.88, but many false alarms) and Sylhet (0.92). It is weak on CDC and Hospital 130. Its high paper scores come from made-up rows.
+\item \textbf{Kotha:} the plain forest finds few sick people on CDC (0.14). Choosing the decision threshold on training data fixes this (recall 0.75, balanced accuracy 0.72). This is the best CDC result, and it uses no quantum part.
+\item \textbf{Zhang:} GIF weights make no clear gain with clean labels (Pima 0.72 vs 0.71; Sylhet slightly worse, 0.87 vs 0.89). Their help is limited to noisy labels, and only on Pima.
+\item \textbf{Kiran:} the small quantum circuit is the \emph{worst} of the group on Pima (0.69) and Sylhet (0.74), and ties the classical models on CDC (0.72). The classical RBF-SVM on the same four inputs does as well or better.
+\item \textbf{Sodar:} Angle is as good as classical models on Pima and Sylhet. Amplitude is much worse (Pima 0.53, recall 0.14).
+\item \textbf{Yadav:} tuning the width makes Z and ZZ about equal to RBF-SVM on Pima. ZZ is a little worse on Sylhet (0.85 vs 0.92).
+\item \textbf{Daga:} Angle and stacking match RBF-SVM. ZZ with the default width is bad: Pima 0.53, and on Sylhet it says ``sick'' for almost everyone (recall 0.99, balanced accuracy 0.65).
+\item \textbf{By dataset:} Sylhet looks easy (best about 0.92, even with duplicate-aware splits). Pima is middling (best 0.74). CDC works only for methods that handle the rare class on purpose (best 0.73). Hospital 130 is close to chance for all (best 0.54, reached by Kotha's tuned-threshold forest and tied by Kiran's VQC).
+\end{itemize}
+\textbf{Overall:} no quantum method is clearly better than the classical reference on any dataset. The best result on Pima, Sylhet and CDC comes from a classical model or a classical trick (class weights, threshold choice). On Hospital 130 the best score (0.54) is shared by a classical and a quantum model, and it is barely above chance.
+
+\subsection{All datasets at a glance}
+\begin{figure}[H]\centering\input{gen_v2/fig_ba.tex}
+\caption{Clean balanced accuracy. \textcolor{cq}{Orange} = quantum or quantum-based; \textcolor{cc}{blue} = classical; dashed line = chance (0.5).}\end{figure}
+\begin{table}[H]\centering\scriptsize\caption{Clean results, mean of 15 folds. Best non-trivial balanced accuracy in bold.}
+\input{gen_v2/w_tab_clean.tex}\end{table}
+\begin{figure}[H]\centering\includegraphics[width=0.9\textwidth]{09_heatmap_balanced_accuracy.png}
+\caption{Notebook-generated heatmap of balanced accuracy for every method and dataset (all models, not only the selected ones).}\end{figure}
+
+\subsection{Pima}
+Classical models and the Angle quantum kernel all sit between 0.71 and 0.74; the best is Kotha's random forest with a tuned decision threshold (\mPimaKothaThrba). ZZ (\mPimaZZba), Amplitude (\mPimaAmpba) and hard voting (\mPimaHVba) are close to chance. Paper-style and clean accuracies agree closely for Daga's models (stacking gap \mDagaStackGap), so Pima has no big leak.
+
+\subsection{Sylhet: the duplicate leak}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[font=\scriptsize,r/.style={draw,minimum width=1.1cm,minimum height=0.5cm}]
+\node at (-3.2,1.6){\textbf{Random split (paper-style)}};
+\foreach \i/\t in {0/A,1/B,2/C}{\node[r,fill=cc!20] at (-4.2+1.2*\i,1){\t};}
+\node[r,fill=cq!30] at (-0.6,1){C};
+\node at (-2.6,0.45){train \hspace{1.6cm} test};
+\draw[-{Stealth},thick,bad] (-0.6,0.7)--(-2.4,0.7) node[midway,below]{same row seen in training};
+\node at (4.4,1.6){\textbf{Grouped split (clean)}};
+\foreach \i/\t in {0/A,1/B}{\node[r,fill=cc!20] at (2.8+1.2*\i,1){\t};}
+\node[r,fill=cq!30] at (5.8,1){C};\node at (4.4,0.45){train \hspace{1.2cm} test: C never in training};
+\end{tikzpicture}\caption{Why duplicates inflate scores: a model that learns rows by heart can score well on a test row it has already seen.}\end{figure}
+Clean balanced accuracy: random forest \mSylRFba, RBF-SVM \mSylRBFba, stacking \mSylStackba, Angle QSVM \mSylAngleba. ZZ with default width reaches \mSylZZba because it answers ``diabetic'' almost always (recall \mSylZZrec, specificity \mSylZZspec).
+\begin{figure}[H]\centering\input{gen_v2/fig_leak.tex}\caption{Accuracy on Sylhet, paper-style (grey) vs clean (blue).}\end{figure}
+\begin{table}[H]\centering\small\caption{Sylhet leak size (accuracy points, paper-style minus clean). Gaps use unrounded values, so they can differ by 0.1 from the rounded columns.}
+\input{gen_v2/w_tab_leak.tex}\end{table}
+Models that can learn rows by heart (ZZ kernels at width 1) gain most. Part of the gap also comes from comparing a single split with 5-fold CV; for Daga's pooled-CV models the gap is purely the grouping effect.
+
+\subsection{CDC and Hospital 130: models that never say ``sick''}
+\begin{figure}[H]\centering\input{gen_v2/fig_recall.tex}\caption{Recall (sick people found). Many bars are zero: those models just guess the biggest group.}\end{figure}
+On CDC only class-weighted or threshold-tuned models work (Kiran's balanced RBF-SVM: balanced accuracy \mCdcKiranRBFba, recall \mCdcKiranRBFrec). Plain RBF-SVM scores \mCdcRBFba. Hospital 130 stays near chance for everyone (best \mHospBestba).
+
+\subsection{Statistical tests against RBF-SVM}
+\begin{table}[H]\centering\scriptsize\caption{Paired tests on balanced accuracy (Nadeau--Bengio, Holm-adjusted per dataset). ``Better'' on CDC means better than a plain RBF-SVM that finds almost no positives; the cause is class weighting, not the quantum or classical type.}
+\input{gen_v2/w_tab_tests.tex}\end{table}
+Counts over all models tested: Pima \npimaworse{} worse / \npimaNS{} no difference; Sylhet \nsylhetworse{} worse / \nsylhetNS{} no difference; CDC \ncdcbetter{} better / \ncdcNS{} no difference; Hospital 130 \nhospNS{} no difference. \textbf{No model beats RBF-SVM on Pima, Sylhet or Hospital 130.} The ``worse'' cases are mostly ZZ/Amplitude with default settings, plus the majority-class guess.
+
+\subsection{Zhang: label noise}
+\begin{figure}[H]\centering\input{gen_v2/fig_zhang.tex}\caption{G-mean as labels are corrupted. Single curves, no significance test.}\end{figure}
+At 40\% noise GIF weights give G-mean \zhpimaLightGBMGIFweights{} vs \zhpimaLightGBM{} (Pima) and \zhsylhetLightGBMGIFweights{} vs \zhsylhetLightGBM{} (Sylhet). On Sylhet GIF is worse at low noise, so the effect is mixed. Zhang's paper reports about 0.6 on private audio data, not comparable.
+
+\subsection{Zhang: paper-style test on all four datasets}
+Here we copy Zhang's own set-up (one split, labels flipped on purpose) and look at both balanced accuracy and recall. Numbers are averages over the folds, taken from \texttt{04\_zhang.csv}.
+\begin{table}[H]\centering\small\caption{Zhang, paper-style test. Plain LightGBM vs LightGBM with GIF weights, when 0\%, 20\% or 40\% of the training labels are wrong.}
+\input{gen_v2/tab_zhang_paper.tex}\end{table}
+\begin{itemize}[leftmargin=1.5em]
+\item GIF weights help on Pima at every noise level (balanced accuracy 0.732 vs 0.712 with clean labels, 0.638 vs 0.545 at 40\% noise).
+\item On Sylhet GIF is a little worse with clean labels and a little better at 40\% noise. The effect is mixed.
+\item On CDC and Hospital 130 both models are close to chance (balanced accuracy 0.50 to 0.59) and find very few sick people. GIF weights do not fix that.
+\item These are single runs on one split. We did not test the differences, so treat them as hints only.
+\end{itemize}
+
+\subsection{Young: made-up test rows make the score look better}
+Young's method adds computer-made (synthetic) patients, and the paper's test set also contains some of them. Those rows are easy to get right. We scored the same model twice: once on the paper-style test set and once on real people only.
+\begin{table}[H]\centering\small\caption{Young's QISICGM ensemble. Left: paper-style test set that includes made-up rows. Right: real rows only. Mean over 5 folds (seed 42), from \texttt{02\_young.csv}.}
+\input{gen_v2/tab_young.tex}\end{table}
+\begin{itemize}[leftmargin=1.5em]
+\item \BAD{CDC:} balanced accuracy drops from 0.951 to 0.622 and recall from 0.963 to 0.304 once the made-up rows are removed.
+\item \BAD{Hospital 130:} balanced accuracy drops from 0.977 to 0.506 (chance) and recall from 0.967 to 0.026. The model finds almost no real patients who return.
+\item Pima: balanced accuracy goes from 0.767 to 0.725, and accuracy from 0.897 to 0.675.
+\item Sylhet: almost no change (0.987 to 0.983), but Sylhet also has the duplicate-row problem described above.
+\end{itemize}
+So the very high paper-style numbers mainly show how easy the made-up rows are.
+
+\section{Comparison with the original papers}
+\begin{table}[H]\centering\scriptsize\caption{Paper-style results (bootstrap 95\% range of accuracy) vs claimed accuracy. Claims from \texttt{recheck/results/paper\_claims\_v2.csv}. N = test rows; ranges for small holdouts are wide.}
+\input{gen_v2/w_tab_claims.tex}\end{table}
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Daga:} stacking, Angle and RBF reproduce. ZZ and Amplitude do \emph{not} (here default scaling; the paper may have tuned them). Claimed AUC 0.734 is below every model we ran (stacking: \mDagaStackAUC), and claimed recall 0.621 is above ours (\mDagaStackRec): unexplained.
+\item \textbf{Upama:} Pima results match; Sylhet scores are leak-inflated. Their QSVM$=0.65$ on Pima equals the majority rate, as our ZZ width-1 model shows.
+\item \textbf{Kotha:} 0.833 not reproduced; AUC 1.00 is mathematically impossible with 25 errors in 150 (AUC $\le 0.97$).
+\item \textbf{Kiran:} 99.7\% contradicts its own 4\% error rate; honest VQC gets \mKiranVQCpaperAcc--\mKiranVQCcleanAcc.
+\item \textbf{Young:} claimed F1 0.8933/AUC 0.8699 rely on synthetic rows in validation folds ((268+2000)/2768 = 81.9\% ``positive''). With GMM fitted on training folds only: AUC \mYoungGMMauc, recall \mYoungGMMrec{} but specificity only \mYoungGMMspec.
+\item \textbf{Zhang, Sodar, Yadav:} original data (audio, URLs, breast cancer) are out of scope; we only adapted the methods. Yadav's ``$>90\%$ on Pima'' is not supported.
+\end{itemize}
+
+\section{Comparison with earlier project phases}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[font=\scriptsize,node distance=0.45cm,b/.style={draw,rounded corners,align=center,text width=3.7cm,minimum height=1.3cm}]
+\node[b,fill=cc!15](a){\textbf{Phase 1}\\Reproduce Daga on Pima (108 numbers)};
+\node[b,fill=warn!15,right=of a](b2){\textbf{Phase 2}\\Desk audit, 8 papers (\texttt{recheck/})};
+\node[b,fill=ok!15,right=of b2](c){\textbf{Phase 3}\\This run: \texttt{notebooks2}, 4 datasets};
+\draw[-{Stealth},thick](a)--(b2);\draw[-{Stealth},thick](b2)--(c);
+\end{tikzpicture}\caption{Project phases.}\end{figure}
+\begin{table}[H]\centering\scriptsize\caption{Earlier results (from \texttt{recheck/DISCREPANCY\_LOG.csv}) vs this run.}
+\begin{tabular}{p{2.2cm}p{4.6cm}p{6.4cm}}\toprule Topic & Earlier phase & This run\\\midrule
+Upama, Sylhet RF & 98.08\% random split; 85.77\% grouped CV & paper-style \mUpamaSylRFpaper; clean \mUpamaSylRFclean. \WARN{Clean is 7 points higher than earlier 85.77\%; not yet explained (different fold design or features?).}\\
+Kotha, Pima & honest CV 76.65\% acc, AUC 0.824 & \mKothaPimaCleanAcc{} acc, AUC \mKothaPimaAUC. \OK{Consistent.}\\
+Kiran, Pima VQC & 64.97\% & \mKiranVQCcleanAcc{} (clean), \mKiranVQCpaperAcc{} (paper-style). Slightly higher; same conclusion.\\
+Young, Pima & GMM harms precision on real patients (50.11\%) & balanced accuracy \mYoungGMMba, accuracy \mYoungGMMacc{} (floor \mPimaFloor): \OK{consistent}, many false alarms.\\
+Yadav, Pima & ZZ 69.13\% vs Z 74.73\% & ZZ \mYadavZZpimaAcc{} vs Z \mYadavZpimaAcc: \OK{same direction}.\\
+Sodar, Pima & raw Amplitude recall 0.0\% & recall \mSodarAmpMinMaxRec{} (MinMax), \mSodarAmpStdRec{} (standardised). \WARN{Differs; settings may differ.}\\
+Daga, Pima & global Gram matrix inflates ~0.4\% & paper-style minus clean stacking accuracy: \mDagaStackGap. \WARN{No inflation visible here.}\\\bottomrule\end{tabular}\end{table}
+
+\section{Corrections to the previous draft}
+\begin{table}[H]\centering\scriptsize\begin{tabular}{p{0.3cm}p{6.2cm}p{7.5cm}}\toprule \# & Problem in the earlier draft & Correction\\\midrule
+1 & ``Original claim'' column listed 98.08\% (Upama) and F1 0.940/AUC 0.932 (Young). & These were \emph{our earlier reproductions}. The papers claim 97.12\% (RF) and F1 0.8933/AUC 0.8699.\\
+2 & ``ZZ-QSVM systematically underperforms''. & Only with default width 1; with tuned width ZZ ties RBF on Pima and Sylhet.\\
+3 & CDC ``cost-weighted superior''. & The reference RBF finds only \mCdcRBFrec{} of positives; the gain is from class weighting.\\
+4 & ``All pure QSVMs: bal.\ acc 0.500, recall 0'' on CDC. & True for Angle and Amplitude; ZZ is slightly above (e.g.\ Daga ZZ 0.506).\\
+5 & ``376 rows in duplicate clusters''. & Not verified; the audit confirms only 251 unique, 269 redundant rows.\\
+6 & Sylhet ``clean 90.5--92.0\%'' mixed accuracy and balanced accuracy. & Now stated separately.\\
+7 & No comparison with the papers' own claims; no Hospital 130 tests; Zhang noise omitted. & Added.\\
+8 & Table row groups miscounted (\texttt{multirow}). & Table rebuilt.\\
+9 & Sodar ``rank-1 Gram, 85.3\%'' stated as current result. & From the earlier audit; not re-measured here.\\\bottomrule\end{tabular}\end{table}
+
+\section{Limits and open questions}
+\begin{itemize}[leftmargin=1.5em]
+\item Quantum models are simulated with at most 8 qubits; CDC and Hospital 130 use 2,000-row subsamples (less power).
+\item The 15 folds are correlated; corrected tests are cautious but not perfect. Paper-style holdouts of 104--154 rows give ranges of about $\pm$6 points.
+\item We read only the parts of the notebook code tied to the open questions (01, 06, 08 and the authors' script), not every line, and we did not view the PDF pages by eye. The Zhang and Young tables above are single runs without significance tests.
+item Not yet tested: the explanations above for Daga (IQP map, PCA scaling, hard-vote stacking) and for Upama's Sylhet gap. They need a machine with Python.
+item Next steps: add an IQP kernel and a hard-vote stacker to the notebooks and rerun; add a Sylhet run on the 251 distinct rows.
+\end{itemize}
+
+\section{Conclusion}
+For diabetes tabular data, tuned classical models (random forest, logistic regression, RBF-SVM) are as good as any quantum kernel we tested. Quantum kernels need tuning to avoid collapse, never gave a significant gain, and several high published numbers come from duplicate leaks, synthetic rows in validation, or are not reproducible. Report balanced accuracy and recall, use grouped splits for survey data, and compare against tuned classical baselines.
+
+\appendix\section{How the numbers were produced}
+\texttt{notebooks2/results/summary.md} (from the Colab run) was parsed by \texttt{latex\_report/gen\_part1.ps1} and \texttt{gen\_part2.ps1}, which write the files in \texttt{gen\_v2/} (tables, chart data, macros). Re-run them to refresh the report. Claimed values are from \texttt{recheck/results/paper\_claims\_v2.csv}.
+\end{document}
+

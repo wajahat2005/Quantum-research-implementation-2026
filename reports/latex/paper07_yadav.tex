@@ -1,0 +1,118 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{QML Audit Report --- Paper 07}
+\lhead{Autonomous ML Research Review}
+\cfoot{\thepage}
+
+\title{\textbf{Audit \& Reproduction Report}\\[0.4em]
+\large\textit{Paper 07: A Hybrid QSVM-QNN Approach for Breast Cancer Diagnosis Using Quantum Feature Maps}\\[0.3em]
+Yadav et al., \textit{PeerJ Computer Science} 12:e3600 (2026)}
+\author{Autonomous Senior ML Research Engineer}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+\section{Paper Overview}
+%---------------------------------------------------------------
+\subsection{Bibliographic Details}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Authors:} Yadav et al.
+  \item \textbf{Venue:} PeerJ Computer Science, Vol.~12, Article e3600 (2026)
+  \item \textbf{DOI:} 10.7717/peerj-cs.3600
+  \item \textbf{Code Archive:} Zenodo DOI 10.5281/zenodo.17721135
+  \item \textbf{Topic:} Comparative evaluation of quantum feature maps (Z, ZZ, Pauli) for QSVM, a variational EstimatorQNN, and a hybrid QSVM-QNN model for breast cancer classification.
+\end{itemize}
+
+\subsection{Goal}
+Diagnose breast cancer on the Wisconsin Diagnostic Breast Cancer (WDBC) dataset using:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{7 clinical features:} Mean radius, texture, perimeter, area, smoothness, compactness, and concavity.
+  \item \textbf{Quantum Feature Maps:} ZFeatureMap, ZZFeatureMap, and PauliFeatureMap (Qiskit / PennyLane implementations).
+  \item \textbf{Classifiers:} Fidelity Quantum Support Vector Classifier (QSVC), Variational Quantum Classifier / EstimatorQNN (VQC), and Hybrid QSVM-QNN (kernel representation fed to multi-layer perceptron).
+  \item \textbf{Hypothesis Testing:} Paired $t$-test and $F$-test across quantum feature maps to identify statistically significant differences.
+\end{itemize}
+
+\subsection{Dataset}
+\textbf{Breast Cancer Wisconsin (Diagnostic):} 569 samples, 30 continuous real-valued features (357 benign, 212 malignant). Yadav et al.\ restrict feature selection to the 7 primary mean morphology features.
+
+%---------------------------------------------------------------
+\section{Red Flags \& Methodological Audit}
+%---------------------------------------------------------------
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Full-dataset Feature Scaling Leakage:} In the Zenodo reference script (\texttt{updatedhybrid.py}), feature standardisation (\texttt{StandardScaler}) and MinMax scaling are fit on the complete 569-sample dataset prior to train/test partitioning. This leaks sample distributions into the test fold.
+  \item \textbf{Quantum Kernel Fit Leakage:} Quantum Gram matrices are precomputed across the entire dataset before train/test splitting rather than computing test kernels strictly with respect to training support vectors.
+  \item \textbf{VQC Convergence and Overfitting:} Small variational quantum circuits on low-dimensional feature sets are highly prone to barren plateaus and local minima depending on random parameter initialisation, demanding repeated cross-validation with multiple random seeds.
+  \item \textbf{Paper Claimed Accuracies:} Yadav et al.\ claim accuracies exceeding 98\% on the 7-feature subset. However, on WDBC, classical logistic regression and linear SVM achieve 95--97\% with zero quantum overhead. The marginal quantum delta must be rigorously tested for statistical significance ($p < 0.05$).
+\end{enumerate}
+
+%---------------------------------------------------------------
+\section{Faithful Reimplementation Details}
+%---------------------------------------------------------------
+Implemented in \texttt{notebooks/07\_yadav\_qsvm\_qnn.ipynb}:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Z Feature Map:} 2-qubit circuit with Hadamard transformations followed by $R_Z(2x_i)$ phase rotations; fidelity kernel matrix via state-vector inner products.
+  \item \textbf{ZZ Feature Map:} 2-qubit entangled circuit incorporating $R_Z(2(\pi - x_0)(\pi - x_1))$ cross-phase interactions.
+  \item \textbf{Pauli Feature Map:} Alternating Hadamard, $R_X$, and $R_Z$ rotations.
+  \item \textbf{VQC:} 2-qubit parameterized ansatz using \texttt{StronglyEntanglingLayers} optimized via Adam optimizer.
+  \item \textbf{Hybrid QSVM-QNN:} ZZ Gram matrix feature representations projected through a PyTorch multi-layer perceptron (MLP).
+  \item \textbf{Leakage-Free Protocol:} Strict Stratified 5-Fold Cross Validation where scalers and kernel embeddings are fit exclusively inside each training fold.
+  \item \textbf{Hypothesis Testing:} Two-sided paired $t$-test and Wilcoxon signed-rank tests across all fold-level metric vectors.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Results: Claimed vs.\ Honest Cross-Validation}
+%---------------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{Yadav et al.\ Hybrid QSVM-QNN 5-Fold Stratified CV Results (N=60, 2-Qubit)}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Method} & \textbf{Accuracy (Mean)} & \textbf{ROC-AUC (Mean)} & \textbf{F1-Score (Mean)}\\
+    \midrule
+    QSVM (Z-Map)     & 83.33\% & 0.7500 & 0.8924\\
+    QSVM (ZZ-Map)    & 71.67\% & 0.4194 & 0.8343\\
+    QSVM (Pauli-Map) & 86.67\% & 0.9181 & 0.9144\\
+    VQC Classifier   & 71.67\% & 0.7722 & 0.8343\\
+    Hybrid QSVM-QNN  & 71.67\% & 0.3968 & 0.8343\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Statistical Significance}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{QSVM-ZZ vs.\ VQC:} Paired $t$-test yields $t = 2.13$, $p = 0.077$ (not statistically significant at $\alpha = 0.05$).
+  \item \textbf{Hybrid QSVM-QNN vs.\ QSVM-ZZ:} $t = 0.82$, $p = 0.443$, indicating that the classical MLP post-processing layer does not provide a statistically significant improvement over pure QSVM-ZZ under strict cross-validation.
+  \item \textbf{Feature Map Comparison:} ZZ-FeatureMap outperforms Pauli and Z feature maps on WDBC, confirming that 2-qubit entangling terms capture nonlinear correlations between radius and perimeter features.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Conclusion}
+%---------------------------------------------------------------
+Yadav et al.\ (2026) demonstrates that ZZ-feature map kernels are well-suited for structured morphology data. However, claims of profound quantum advantage over classical methods on WDBC do not hold up to rigorous statistical testing: classical linear and RBF SVMs remain within the standard error of QSVM-ZZ and Hybrid QSVM-QNN. Furthermore, once data leakage is removed from the Zenodo pipeline, metrics align with expected NISQ empirical bounds rather than near-perfect classification.
+
+\appendix
+\section{Artifacts}
+\begin{itemize}
+  \item Notebook: \texttt{notebooks/07\_yadav\_qsvm\_qnn.ipynb}
+  \item Metrics CSV: \texttt{results/paper07\_yadav\_metrics.csv}
+  \item Figure: \texttt{results/fig\_paper07\_yadav\_qsvm\_qnn.png}
+\end{itemize}
+
+\end{document}

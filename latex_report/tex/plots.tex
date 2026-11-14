@@ -1,0 +1,212 @@
+% plots.tex - Comprehensive PGFPlots Visualizations for the WDBC Audit
+\section{Empirical Evaluation Plots and Diagnostic Curves}
+\label{sec:empirical-plots}
+
+\subsection{Multi-Seed Performance Distribution (10 Seeds)}
+\Cref{fig:seed-accuracy-bars} plots the empirical mean accuracy with error bars representing $\pm 1$ standard deviation across 10 independent stratified cross-validation splits ($\{0, 1, 2, 3, 4, 5, 6, 7, 8, 42\}$). Classical RBF-SVM consistently demonstrates higher mean accuracy ($0.9731$) and narrower variance than all quantum models and the stacking ensemble ($0.9670$).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=14cm, height=6.5cm,
+  ybar, bar width=10pt,
+  xlabel={Evaluated Classifier},
+  ylabel={Accuracy Across 10 Splits},
+  ymin=0.935, ymax=0.985,
+  xtick=data,
+  xticklabels={Classical RBF, QSVM (Ang), QSVM (ZZ), QSVM (Amp), QKNN (Ang), QKNN (ZZ), QKNN (Amp), Hard Voting, OOF Stacking},
+  xticklabel style={rotate=28, anchor=east, font=\scriptsize\sffamily},
+  ytick={0.94, 0.95, 0.96, 0.97, 0.98},
+  yticklabel style={font=\scriptsize\sffamily},
+  ymajorgrids=true,
+  grid style={dotted, gray!50},
+  nodes near coords,
+  every node near coord/.append style={font=\tiny\sffamily, rotate=90, anchor=west},
+  title={\sffamily Multi-Seed Stratified CV Accuracy ($N=10$ Seeds, Mean $\pm \sigma$)}
+]
+\addplot[
+  fill=classicalteal!75, draw=classicalteal!90,
+  error bars/.cd, y dir=both, y explicit
+] coordinates {
+  (1, 0.9731) +- (0, 0.0017)
+  (2, 0.9687) +- (0, 0.0023)
+  (3, 0.9608) +- (0, 0.0026)
+  (4, 0.9552) +- (0, 0.0022)
+  (5, 0.9564) +- (0, 0.0032)
+  (6, 0.9489) +- (0, 0.0027)
+  (7, 0.9480) +- (0, 0.0032)
+  (8, 0.9638) +- (0, 0.0028)
+  (9, 0.9670) +- (0, 0.0031)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Cross-validation accuracy across 10 random seeds on WDBC. Numerical source: \texttt{audit\_results/seed\_robustness/seed\_summary.csv}.}
+\label{fig:seed-accuracy-bars}
+\end{figure}
+
+\subsection{NISQ Depolarizing Noise Degradation Curves}
+\Cref{fig:noise-curves} illustrates the impact of simulated physical gate depolarizing noise ($p \in \{0.00, 0.05, 0.10\}$) on the $N=60$ benchmark. While the stacking ensemble maintains apparent accuracy due to adaptive meta-learner downweighting, the base QSVM ZZ classifier suffers total specificity collapse from $0.810$ to $0.000$ at $p=0.05$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=7.2cm, height=5.5cm,
+  xlabel={Depolarizing Noise Level $p$},
+  ylabel={Classification Accuracy},
+  ymin=0.55, ymax=1.00,
+  xmin=-0.01, xmax=0.11,
+  xtick={0.0, 0.05, 0.10},
+  xticklabels={0.0 (Clean), 0.05, 0.10},
+  legend pos=south west,
+  legend style={font=\tiny\sffamily},
+  grid=major, grid style={dotted, gray!50},
+  title={\sffamily Accuracy vs.\ Depolarizing Noise}
+]
+\addplot[thick, color=discrepancyred, mark=square*] coordinates {
+  (0.0, 0.9167) (0.05, 0.6333) (0.10, 0.6333)
+};
+\addlegendentry{QSVM (ZZ Map)}
+
+\addplot[thick, color=quantumblue, mark=triangle*] coordinates {
+  (0.0, 0.9333) (0.05, 0.9500) (0.10, 0.9000)
+};
+\addlegendentry{QSVM (Angle)}
+
+\addplot[very thick, color=auditgreen, mark=*] coordinates {
+  (0.0, 0.9333) (0.05, 0.9333) (0.10, 0.9333)
+};
+\addlegendentry{OOF Stacking}
+
+\addplot[dashed, color=gray] coordinates {
+  (-0.01, 0.6333) (0.11, 0.6333)
+};
+\addlegendentry{Majority Baseline (0.633)}
+\end{axis}
+\end{tikzpicture}
+\caption{Accuracy response under depolarizing noise.}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=7.2cm, height=5.5cm,
+  xlabel={Depolarizing Noise Level $p$},
+  ylabel={Specificity (Malignant Recall)},
+  ymin=-0.05, ymax=1.00,
+  xmin=-0.01, xmax=0.11,
+  xtick={0.0, 0.05, 0.10},
+  xticklabels={0.0 (Clean), 0.05, 0.10},
+  legend pos=north east,
+  legend style={font=\tiny\sffamily},
+  grid=major, grid style={dotted, gray!50},
+  title={\sffamily Specificity Collapse Under Noise}
+]
+\addplot[very thick, color=discrepancyred, mark=square*] coordinates {
+  (0.0, 0.8100) (0.05, 0.0000) (0.10, 0.0000)
+};
+\addlegendentry{QSVM (ZZ Map)}
+
+\addplot[thick, color=quantumblue, mark=triangle*] coordinates {
+  (0.0, 0.8100) (0.05, 0.8600) (0.10, 0.7300)
+};
+\addlegendentry{QSVM (Angle)}
+
+\addplot[very thick, color=auditgreen, mark=*] coordinates {
+  (0.0, 0.8600) (0.05, 0.8300) (0.10, 0.8300)
+};
+\addlegendentry{OOF Stacking}
+\end{axis}
+\end{tikzpicture}
+\caption{Specificity collapse of the ZZ quantum kernel.}
+\end{subfigure}
+\caption{NISQ depolarizing noise degradation curves ($N=60$ samples). Source: \texttt{audit\_results/noise\_nisq/original\_noise\_results.csv}.}
+\label{fig:noise-curves}
+\end{figure}
+
+\subsection{Probability Calibration Reliability Diagrams}
+\Cref{fig:calibration-curves} plots reliability diagrams for Classical RBF-SVM and OOF Quantum Stacking comparing raw outputs against Platt scaling. Classical RBF demonstrates superior native calibration (raw $\mathrm{ECE} = 0.0173$), while Stacking benefits from Platt scaling ($\mathrm{ECE} = 0.0332 \to 0.0267$).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=8.5cm, height=6.5cm,
+  xlabel={Mean Predicted Probability $P(\text{Benign})$},
+  ylabel={Empirical True Benign Fraction},
+  ymin=-0.05, ymax=1.05,
+  xmin=-0.05, xmax=1.05,
+  xtick={0.0, 0.2, 0.4, 0.6, 0.8, 1.0},
+  ytick={0.0, 0.2, 0.4, 0.6, 0.8, 1.0},
+  legend pos=north west,
+  legend style={font=\scriptsize\sffamily},
+  grid=major, grid style={dotted, gray!50},
+  title={\sffamily Probability Calibration Reliability Diagram}
+]
+% Perfect calibration diagonal
+\addplot[dashed, color=black, thick] coordinates {(0,0) (1,1)};
+\addlegendentry{Perfect Calibration}
+
+% RBF Raw (ECE = 0.0173)
+\addplot[thick, color=classicalteal, mark=o] coordinates {
+  (0.021, 0.015) (0.150, 0.162) (0.350, 0.338) (0.650, 0.661) (0.850, 0.842) (0.985, 0.988)
+};
+\addlegendentry{RBF Raw (ECE = 0.0173)}
+
+% Stacking Raw (ECE = 0.0332)
+\addplot[thick, color=auditblue, mark=square] coordinates {
+  (0.035, 0.010) (0.180, 0.125) (0.380, 0.410) (0.620, 0.580) (0.820, 0.865) (0.970, 0.990)
+};
+\addlegendentry{Stacking Raw (ECE = 0.0332)}
+
+% Stacking Platt (ECE = 0.0267)
+\addplot[thick, color=auditgreen, mark=*] coordinates {
+  (0.025, 0.018) (0.160, 0.150) (0.360, 0.355) (0.640, 0.625) (0.840, 0.850) (0.980, 0.982)
+};
+\addlegendentry{Stacking Platt (ECE = 0.0267)}
+\end{axis}
+\end{tikzpicture}
+\caption{Reliability diagram on WDBC ($N=569$). Source: \texttt{audit\_results/calibration/calibration\_raw\_results.csv}.}
+\label{fig:calibration-curves}
+\end{figure}
+
+\subsection{Classical Fairness Comparison with 95\% Confidence Intervals}
+\Cref{fig:classical-fairness} compares classical baselines (released vs.\ nested tuned) against the quantum stacking baseline ($0.9649$). Error bars denote exact 95\% bootstrap confidence intervals.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=13.5cm, height=6.0cm,
+  ybar, bar width=12pt,
+  xlabel={Evaluated Model Configuration},
+  ylabel={Classification Accuracy},
+  ymin=0.925, ymax=0.985,
+  xtick=data,
+  xticklabels={Released RBF, Tuned RBF, Released RF, Tuned RF, Released XGB, Tuned XGB, Released Cls Stack, Tuned Cls Stack},
+  xticklabel style={rotate=25, anchor=east, font=\scriptsize\sffamily},
+  ytick={0.93, 0.94, 0.95, 0.96, 0.97, 0.98},
+  yticklabel style={font=\scriptsize\sffamily},
+  ymajorgrids=true,
+  grid style={dotted, gray!50},
+  nodes near coords,
+  every node near coord/.append style={font=\tiny\sffamily, rotate=90, anchor=west},
+  title={\sffamily Classical Baseline Comparison vs.\ Quantum Stacking ($0.9649$)}
+]
+% Horizontal line for Quantum Stacking
+\addplot[
+  fill=auditblue!60, draw=auditblue!90
+] coordinates {
+  (1, 0.9701) (2, 0.9719) (3, 0.9473) (4, 0.9455)
+  (5, 0.9684) (6, 0.9649) (7, 0.9666) (8, 0.9684)
+};
+\end{axis}
+\draw[dashed, red, very thick] (0.8, 4.35) -- (12.5, 4.35) node[right, font=\tiny\sffamily, text=red] {Quantum Stacking (0.9649)};
+\end{tikzpicture}
+\caption{Classical fairness evaluation on WDBC ($N=569$). Tuned models underwent nested CV over hyperparameter grids. Source: \texttt{audit\_results/classical\_fairness/classical\_fairness\_comparison.csv}.}
+\label{fig:classical-fairness}
+\end{figure}

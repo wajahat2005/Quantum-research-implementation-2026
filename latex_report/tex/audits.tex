@@ -1,0 +1,170 @@
+% audits.tex - In-Depth Technical Audits of Core Discrepancies
+\section{In-Depth Technical Audits of Implementation Discrepancies}
+\label{sec:audits-technical}
+
+\subsection{Audit 1: Statically Hardcoded Model Selection}
+The paper asserts that candidate base models are dynamically pruned via pairwise McNemar contingency tests to eliminate statistically redundant classifiers. Inspection of the released code at commit \texttt{23c89d3} reveals that while \texttt{base\_model\_selection\_mcnemar.py} prints pairwise contingency counts, it executes strictly as a detached diagnostic script.
+
+In the primary training script \texttt{quantum\_clinical\_github.py}, base model selection is hardcoded at line 787:
+\begin{lstlisting}[language=Python]
+# Line 787 of quantum_clinical_github.py
+BASE_MODEL_NAMES = [
+    'QSVM (Amplitude)',
+    'QKNN (Amplitude)',
+    'QSVM (ZZ Map)',
+    'QKNN (Angle)'
+]
+\end{lstlisting}
+
+\subsubsection{Exhaustive Nested Selection Audit}
+To test whether this quartet would naturally emerge under an unbiased nested accuracy-based selection rule, we implemented an exhaustive nested 10-fold CV audit evaluating all $\binom{6}{4} = 15$ possible 4-model subsets inside each outer training fold.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Exhaustive nested 10-fold selection audit across all outer folds on WDBC.}
+\label{tab:nested-audit-table}
+\begin{tabularx}{\textwidth}{ccccc}
+\toprule
+\textbf{Outer Fold} & \textbf{Top-Ranked Model} & \textbf{Inner CV Accuracy} & \textbf{Paper Quartet Selected?} & \textbf{Optimal 4-Model Subset} \\
+\midrule
+Fold 0 & QSVM (Angle) & 0.9668 & \textbf{No} (Rank 9/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 1 & QSVM (Angle) & 0.9610 & \textbf{No} (Rank 8/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 2 & QSVM (Angle) & 0.9746 & \textbf{No} (Rank 11/15) & [QSVM-Ang, QSVM-Amp, QKNN-Ang, QSVM-ZZ] \\
+Fold 3 & QSVM (Angle) & 0.9688 & \textbf{No} (Rank 7/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 4 & QSVM (Angle) & 0.9629 & \textbf{No} (Rank 9/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 5 & QSVM (Angle) & 0.9688 & \textbf{No} (Rank 10/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 6 & QSVM (Angle) & 0.9649 & \textbf{No} (Rank 8/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 7 & QSVM (Angle) & 0.9707 & \textbf{No} (Rank 12/15) & [QSVM-Ang, QSVM-Amp, QKNN-Ang, QSVM-ZZ] \\
+Fold 8 & QSVM (Angle) & 0.9688 & \textbf{No} (Rank 9/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+Fold 9 & QSVM (Angle) & 0.9629 & \textbf{No} (Rank 9/15) & [QSVM-Ang, QSVM-ZZ, QKNN-Ang, QKNN-Amp] \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+In \textbf{10 out of 10 folds}, QSVM (Angle) was the single highest-performing base classifier, yet it is excluded from the author's hardcoded quartet. The author quartet was selected in \textbf{0 out of 10 outer folds}.
+
+\subsection{Audit 2: VQC Autograd Severance and Zero-Gradient Flow}
+In \texttt{vqc\_ablation\_and\_calibration\_github.py}, the training loss function for the Variational Quantum Classifier (a 2-layer strongly entangling circuit with 48 trainable parameters) is implemented as:
+\begin{lstlisting}[language=Python]
+# Original Author Implementation (Breaks Autograd)
+predictions = [qnn_circuit(weights, x) for x in X]
+loss = pnp.mean((predictions - Y)**2)
+\end{lstlisting}
+
+Because \texttt{predictions} is built via a standard Python list comprehension, elementwise subtraction against the Autograd tensor \texttt{Y} severs the reverse-mode automatic differentiation graph.
+
+\begin{table}[H]
+\centering
+\small
+\caption{VQC gradient audit on an identical fixed minibatch ($N=32$, 48 trainable parameters). Numerical source: \texttt{audit\_results/vqc\_loss\_bug\_gradient\_audit.csv}.}
+\label{tab:vqc-grad-audit}
+\begin{tabularx}{\textwidth}{lccccc}
+\toprule
+\textbf{Implementation} & \textbf{Forward Loss} & \textbf{Grad $\ell_2$ Norm} & \textbf{Max $|\nabla|$} & \textbf{Nonzero Grads} & \textbf{Max FD Error} \\
+\midrule
+Author (List Subtraction) & 0.996378 & $\mathbf{0.000000}$ & $0.000000$ & $0 / 48$ & $0.092090$ \\
+Corrected (\texttt{pnp.stack}) & 0.996378 & $\mathbf{0.101766}$ & $0.092090$ & $28 / 48$ & $\mathbf{1.11 \times 10^{-11}}$ \\
+Corrected (\texttt{pnp.array}) & 0.996378 & $\mathbf{0.101766}$ & $0.092090$ & $28 / 48$ & $\mathbf{1.11 \times 10^{-11}}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+While the forward pass computes identical scalar loss ($0.996378$), the author's backward pass yields a gradient norm of identically zero across all 48 parameters. The circuit parameters never update during training. The corrected implementation using \texttt{pnp.stack} restores gradient flow, verified against two-sided finite differences to machine precision ($\varepsilon_{\mathrm{FD}} = 1.11 \times 10^{-11}$).
+
+\subsection{Audit 3: NISQ Noise Circuit Topology Mismatch and Catastrophic Collapse}
+In the clean baseline, the ZZ feature map utilizes an all-to-all complete graph $K_8$ ($\binom{8}{2} = 28$ interaction pairs, 56 CNOT gates). In the released noise simulation script \texttt{run\_noise\_audit.py}, the author substitutes a nearest-neighbor 1D linear chain $P_8$ ($7$ interaction pairs, 14 CNOT gates), representing a $75\%$ reduction in two-qubit entangling gates.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Diagnostic properties of clean and noisy quantum Gram matrices ($N=60$ benchmark). Source: \texttt{audit\_results/noise\_nisq/noisy\_gram\_matrix\_checks.csv}.}
+\label{tab:noisy-gram-checks}
+\begin{tabularx}{\textwidth}{lccccc}
+\toprule
+\textbf{Matrix Name} & \textbf{Noise $p$} & \textbf{Architecture} & \textbf{Diag Mean} & \textbf{Min Eigenvalue} & \textbf{Is PSD?} \\
+\midrule
+Clean Angle (RX) & 0.00 & 8-Qubit All-RX & 1.0000 & $+1.79 \times 10^{-4}$ & \textbf{True} \\
+Clean ZZ ($K_8$) & 0.00 & All-to-All (56 CNOTs) & 1.0000 & $+1.12 \times 10^{-1}$ & \textbf{True} \\
+Clean Amplitude & 0.00 & 3-Qubit Normalized & 1.0000 & $-4.07 \times 10^{-15}$ & \textbf{True} \\
+\midrule
+Released Noisy ZZ ($P_8$) & 0.05 & 1D Chain (14 CNOTs) & 0.2050 & $+1.15 \times 10^{-3}$ & \textbf{True} \\
+Released Noisy ZZ ($P_8$) & 0.10 & 1D Chain (14 CNOTs) & 0.0545 & $+2.22 \times 10^{-4}$ & \textbf{True} \\
+Corrected Noisy ZZ ($K_8$) & 0.05 & All-to-All (56 CNOTs) & \textbf{0.0116} & $+5.28 \times 10^{-4}$ & \textbf{True} \\
+Corrected Noisy ZZ ($K_8$) & 0.10 & All-to-All (56 CNOTs) & \textbf{0.0044} & $+1.26 \times 10^{-5}$ & \textbf{True} \\
+\midrule
+Noisy Angle (RY/RX) & 0.05 & 8-Qubit Depolarizing & 0.5869 & $+9.27 \times 10^{-5}$ & \textbf{True} \\
+Noisy Angle (RY/RX) & 0.10 & 8-Qubit Depolarizing & 0.3454 & $+4.72 \times 10^{-5}$ & \textbf{True} \\
+Noisy Amplitude & 0.05 & 3-Qubit Depolarizing & 0.8116 & $-2.90 \times 10^{-3}$ & \textbf{False} \\
+Noisy Amplitude & 0.10 & 3-Qubit Depolarizing & 0.6593 & $-5.78 \times 10^{-3}$ & \textbf{False} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Self-Fidelity Collapse:} In the true all-to-all architecture ($K_8$), depolarizing noise degrades the diagonal self-similarity $K(x_i, x_i)$ to $0.0116$ ($p=0.05$) and $0.0044$ ($p=0.10$). Although technically PSD, the kernel matrix has lost distinguishing geometric structure.
+
+\begin{table}[H]
+\centering
+\small
+\caption{QSVM ZZ performance under depolarizing noise ($N=60$, 38 Benign, 22 Malignant). Source: \texttt{audit\_results/noise\_nisq/noisy\_qsvm\_confusion\_matrices.csv}.}
+\label{tab:qsvm-noise-collapse}
+\begin{tabularx}{\textwidth}{lcccccc}
+\toprule
+\textbf{Configuration} & \textbf{Noise $p$} & \textbf{Accuracy} & \textbf{Specificity} & \textbf{TN} & \textbf{FP} & \textbf{Single-Class Prediction?} \\
+\midrule
+Clean Baseline & 0.00 & 0.9167 & 0.8100 & 18 & 4 & \textbf{No} (Balanced) \\
+Released ZZ ($P_8$) & 0.05 & 0.6333 & 0.0000 & 0 & 22 & \textbf{Yes (100\% Benign)} \\
+Released ZZ ($P_8$) & 0.10 & 0.6333 & 0.0000 & 0 & 22 & \textbf{Yes (100\% Benign)} \\
+Corrected ZZ ($K_8$) & 0.05 & 0.6333 & 0.0000 & 0 & 22 & \textbf{Yes (100\% Benign)} \\
+Corrected ZZ ($K_8$) & 0.10 & 0.6333 & 0.0000 & 0 & 22 & \textbf{Yes (100\% Benign)} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Under depolarizing noise, QSVM ZZ collapses into predicting exclusively the majority class (Benign, Class~1). Specificity drops to exactly $0.0000$ (TN = 0, FP = 22).
+
+\subsubsection{Meta-Learner Downweighting Verification}
+Tracking the logistic regression coefficients across 5 folds confirms that the stacking ensemble survives only because the meta-learner adaptively drives $\beta_{\mathrm{ZZ}}$ to zero:
+\begin{table}[H]
+\centering
+\small
+\caption{Meta-learner logistic regression coefficients $\beta$ under clean and noisy regimes.}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Condition} & \textbf{Noise Level $p$} & \textbf{Mean $\beta_{\mathrm{ZZ}}$} & \textbf{Mean $|\beta_{\mathrm{ZZ}}|$} \\
+\midrule
+Clean Baseline & 0.00 & $+1.468$ & $1.468 \pm 0.700$ \\
+Noisy Released ($P_8$) & 0.05 & $-0.0002$ & $< 0.001$ \\
+Noisy Released ($P_8$) & 0.10 & $-0.0001$ & $< 0.001$ \\
+Noisy Corrected ($K_8$) & 0.05 & $+0.0000$ & $< 0.001$ \\
+Noisy Corrected ($K_8$) & 0.10 & $+0.0000$ & $< 0.001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+Across all noisy folds, $|\beta_{\mathrm{ZZ}}| < 0.001$. The ensemble's apparent noise resilience is purely classical pruning of a collapsed component.
+
+\subsection{Audit 4: Fold-9 Meta-Learner Concordance Shift Mechanism}
+The global stacking ensemble (549 correct) and fold-local nested stacking ensemble (550 correct) differ by exactly 1 net sample (7 discordant samples overall, 98.77\% concordance). All 7 discordant predictions occur in Fold~9.
+
+Three benign patients (\#288, \#505, \#537) share the identical base prediction vector:
+\begin{equation}
+\mathbf{v} = [QSVM_{\mathrm{Ang}}=1, \; QKNN_{\mathrm{Ang}}=1, \; QSVM_{\mathrm{Amp}}=1, \; QKNN_{\mathrm{Amp}}=1, \; QSVM_{\mathrm{ZZ}}=0].
+\end{equation}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fixed Global Meta-Learner:}
+  \begin{equation}
+  \boldsymbol{\beta} = [2.1179, \; 0.7493, \; 3.0095, \; 1.0956], \quad \beta_0 = -4.2435.
+  \end{equation}
+  \begin{equation}
+  z = \boldsymbol{\beta}^\top [1, 1, 1, 0] + \beta_0 = 3.9628 - 4.2435 = -0.2808 \implies P(\text{Benign}) = 0.4303 < 0.5 \implies \hat{y} = 0 \text{ (FN)}.
+  \end{equation}
+  \item \textbf{Fold-Local Nested Meta-Learner:}
+  \begin{equation}
+  \boldsymbol{\beta} = [0.5843, \; 1.5364, \; 2.7507, \; 2.4975], \quad \beta_0 = -4.5148.
+  \end{equation}
+  \begin{equation}
+  z = \boldsymbol{\beta}^\top [1, 1, 1, 0] + \beta_0 = 4.8714 - 4.5148 = +0.3566 \implies P(\text{Benign}) = 0.5882 > 0.5 \implies \hat{y} = 1 \text{ (TP)}.
+  \end{equation}
+\end{itemize}
+This explains the micro-mechanistic origin of the single-sample difference. Two-one-sided $t$-tests (TOST) confirm practical equivalence within a $\pm 1\%$ equivalence margin ($p = 0.0385$).

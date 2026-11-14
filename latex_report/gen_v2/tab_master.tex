@@ -1,0 +1,32 @@
+﻿\begin{tabular}{llcccc}
+\toprule & & Pima & Sylhet & CDC & Hosp.\ 130\\
+Paper & Method & \multicolumn{4}{c}{balanced acc.\ / recall}\\\midrule
+Upama & Angle QSVM, DML top features & 0.72 / 0.56 & 0.90 / 0.93 & 0.50 / 0.00 & 0.50 / 0.00\\
+Upama & Random forest, DML top features & 0.73 / 0.60 & 0.91 / 0.95 & 0.58 / 0.21 & 0.50 / 0.01\\
+\midrule
+Young & QISICGM ensemble + GMM (train folds only) & 0.71 / 0.88 & 0.92 / 0.95 & 0.61 / 0.28 & 0.50 / 0.01\\
+\midrule
+Kotha & Random forest & 0.73 / 0.60 & 0.92 / 0.94 & 0.56 / 0.14 & 0.50 / 0.00\\
+Kotha & Random forest, tuned threshold & 0.74 / 0.76 & 0.91 / 0.91 & 0.72 / 0.75 & 0.54 / 0.44\\
+\midrule
+Zhang & LightGBM & 0.71 / 0.59 & 0.89 / 0.91 & 0.59 / 0.21 & 0.50 / 0.00\\
+Zhang & LightGBM + GIF weights & 0.72 / 0.59 & 0.87 / 0.86 & 0.60 / 0.24 & 0.50 / 0.01\\
+\midrule
+Kiran & VQC (4 qubits) & 0.69 / 0.69 & 0.74 / 0.76 & 0.72 / 0.71 & 0.54 / 0.50\\
+Kiran & RBF-SVM, same 4 PCs, balanced & 0.71 / 0.74 & 0.90 / 0.91 & 0.73 / 0.79 & 0.53 / 0.45\\
+\midrule
+Sodar & Angle QSVM & 0.71 / 0.55 & 0.88 / 0.92 & 0.50 / 0.00 & 0.50 / 0.00\\
+Sodar & Amplitude QSVM (standardised) & 0.53 / 0.14 & 0.80 / 0.90 & 0.50 / 0.00 & 0.50 / 0.00\\
+\midrule
+Yadav & Z QSVM, width by inner CV & 0.71 / 0.54 & 0.89 / 0.89 & 0.51 / 0.03 & 0.50 / 0.00\\
+Yadav & ZZ QSVM (linear), width by inner CV & 0.72 / 0.56 & 0.85 / 0.88 & 0.52 / 0.05 & 0.50 / 0.00\\
+\midrule
+Daga & Angle QSVM & 0.71 / 0.55 & 0.88 / 0.92 & 0.50 / 0.00 & 0.50 / 0.00\\
+Daga & ZZ QSVM (default width) & 0.53 / 0.08 & 0.65 / 0.99 & 0.51 / 0.01 & 0.50 / 0.00\\
+Daga & Stacking (OOF, LR meta) & 0.72 / 0.57 & 0.92 / 0.93 & 0.56 / 0.13 & 0.50 / 0.00\\
+\midrule
+Ref. & RBF-SVM (reference) & 0.71 / 0.56 & 0.92 / 0.94 & 0.53 / 0.07 & 0.50 / 0.00\\
+Ref. & Always guess biggest group & 0.50 / 0.00 & 0.50 / 1.00 & 0.50 / 0.00 & 0.50 / 0.00\\
+\midrule
+\multicolumn{2}{l}{Accuracy of always guessing the biggest group} & 0.65 & 0.62 & 0.86 & 0.91\\
+\bottomrule\end{tabular}

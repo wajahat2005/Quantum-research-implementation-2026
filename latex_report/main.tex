@@ -1,0 +1,307 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=0.95in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs,array,tabularx,longtable,multirow,makecell}
+\usepackage{graphicx,xcolor,float,caption,subcaption}
+\usepackage{enumitem,microtype,setspace,parskip}
+\usepackage{fancyhdr,titlesec}
+\usepackage{listings}
+\usepackage{cancel}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{siunitx}
+\usepackage{xurl}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,calc,fit,backgrounds,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\usepackage[nameinlink,capitalize]{cleveref}
+
+\sisetup{detect-all,round-mode=places,round-precision=4}
+
+\definecolor{auditblue}{RGB}{28,54,104}
+\definecolor{auditgreen}{RGB}{20,90,50}
+\definecolor{discrepancyred}{RGB}{125,32,32}
+\definecolor{limitationgray}{RGB}{90,90,100}
+\definecolor{auditgray}{RGB}{245,246,248}
+\definecolor{quantumblue}{RGB}{10,60,140}
+\definecolor{classicalteal}{RGB}{20,100,100}
+\definecolor{audityellow}{RGB}{150,120,20}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=auditblue,
+  citecolor=auditgreen,
+  urlcolor=quantumblue,
+  pdftitle={Independent Implementation, Reproduction, and Technical Audit of Adaptive Quantum Kernel Selection for WDBC Classification},
+  pdfauthor={Independent WDBC Audit}
+}
+
+\titleformat{\section}{\large\bfseries\sffamily\color{auditblue}}{\thesection}{0.8em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\sffamily\color{auditblue!80!black}}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}{\normalsize\itshape\sffamily}{\thesubsubsection}{0.8em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{auditblue} Independent WDBC Audit of Daga et al.\ (2026)}
+\fancyhead[R]{\small\sffamily\thepage}
+\fancyfoot[C]{\small\sffamily\color{gray} Academic implementation, reproduction, and technical audit}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setstretch{1.12}
+\setlength{\parskip}{0.35em}
+\setlist[itemize]{leftmargin=1.4em,itemsep=0.15em}
+\setlist[enumerate]{leftmargin=1.4em,itemsep=0.15em}
+
+\input{tex/macros}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace*{1.1cm}
+{\Huge\bfseries\sffamily\color{auditblue}
+Independent Implementation, Reproduction,\\[3pt]
+and Technical Audit of Adaptive Quantum\\[3pt]
+Kernel Selection for WDBC Classification}
+\par\vspace{0.35cm}
+{\Large\sffamily A Comparative Study with Daga et al.\ (2026)}
+\par\vspace{0.45cm}
+\rule{\textwidth}{1.4pt}
+\par\vspace{0.25cm}
+{\large\sffamily
+Daga, Naole, Parikh, Bommineni \& Ramu,\\
+``Adaptive quantum kernel selection via leakage-free stacking\\
+for clinical diagnostics on NISQ hardware,''\\
+\textit{Scientific Reports} \textbf{16}, 26840 (2026).\\
+DOI: \texttt{10.1038/s41598-026-56928-1}
+}
+\par\vspace{0.2cm}
+\rule{\textwidth}{0.8pt}
+\par\vspace{0.55cm}
+
+\begin{minipage}{0.92\textwidth}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Empirical scope} & Wisconsin Diagnostic Breast Cancer (\wdbc) only \\
+\textbf{Official repository} & \url{https://github.com/researchbackup27-sudo/Adaptive-Quantum-Kernel-Selection} \\
+\textbf{Verified commit} & \texttt{23c89d350e5135080a8f4f7f012c4e98d1ee3f82} (\texttt{23c89d3}) \\
+\textbf{Branch / tag} & \texttt{reproduction-verified-23c89d3} / \texttt{reproduction-wdbc-v1} \\
+\textbf{Local path} & \texttt{C:/Research/Adaptive-Quantum-Kernel-Selection} \\
+\textbf{Document type} & Independent implementation, reproduction, and technical audit \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+
+\vspace{0.7cm}
+\begin{minipage}{0.88\textwidth}
+\sffamily\small
+\textbf{Statement of scope.} All empirical analyses in this report are restricted to \wdbc\ unless explicitly stated otherwise. Parkinson's disease and Pima Indians Diabetes results from \papername\ are not analysed numerically here.
+\end{minipage}
+
+\vfill
+{\sffamily\small\color{gray}
+This report is an independent academic comparison of paper claims, released source-code behaviour, independent reproduction, and audit-defined experiments.\\
+It is not affiliated with, endorsed by, or co-authored by Daga et al.}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\begin{abstract}
+\noindent\textbf{Motivation.}
+Kernel methods remain a natural baseline for moderately sized, moderately high-dimensional clinical tabular data. Quantum kernels have been proposed as alternative similarity measures on near-term simulators and hardware. Independent reproduction is required because paper methodology and executable code can diverge, and because simulated NISQ claims depend on circuit topology, noise model, and statistical protocol.
+
+\noindent\textbf{Paper contribution.}
+\papername\ describe quantum-kernel QSVM and QKNN classifiers, a classical RBF baseline, hard voting, out-of-fold (OOF) logistic stacking, and additional calibration, explainability, noise, and variational components, evaluated on multiple medical datasets including \wdbc.
+
+\noindent\textbf{Scope.}
+This report audits \wdbc\ only ($N=569$, $D=30$; 212 malignant / class~0; 357 benign / class~1). Other datasets in the paper are mentioned only as context.
+
+\noindent\textbf{Independent implementation and reproduction.}
+Using the unmodified released sources at commit \texttt{23c89d3} and cached $569\times569$ Gram matrices, the nine non-VQC \wdbc\ table entries (classical RBF, six quantum base learners, hard voting, OOF stacking) were reproduced at prediction level under the verified 10-fold protocol. Angle and amplitude kernels agree with closed-form overlaps to machine precision on sampled pairs; the clean ZZ/IQP kernel uses all-to-all $K_8$ connectivity in the tested primary code.
+
+\noindent\textbf{Audits.}
+Audit-defined experiments examined fold-local versus global preprocessing, exhaustive 4-of-6 subset selection, Holm correction of a 32-test RBF-comparator family, bounded nested classical tuning, leakage-controlled calibration, nested XAI, feature-backtracking algebra, clean-versus-noisy circuit topology, density-matrix noise, and ten CV seeds.
+
+\noindent\textbf{Major discrepancies (technical, not accusatory).}
+The released stacking quartet is hardcoded. The master VQC cost path severs autodiff under the tested PennyLane CPU configuration. The released noisy Angle/ZZ circuits differ from the clean kernels. The published raw-feature backtracking formula is algebraically dominated by PCA structure after normalisation.
+
+\noindent\textbf{Conclusion.}
+Under the audited \wdbc\ protocols, the non-VQC benchmark is independently reproducible, classical RBF remains strong, and the audited quantum stacking ensemble does not demonstrate superiority over classical RBF. Calibration is metric-dependent. Noisy simulation is not hardware validation. Parkinson's and Pima results, repaired full-scale VQC benchmarking, and physical NISQ execution are outside the present evidence.
+\end{abstract}
+
+\vspace{0.4em}
+\noindent\textbf{Keywords:}
+quantum kernels; QSVM; QKNN; stacking; nested cross-validation; data leakage; Holm correction; calibration; explainable AI; NISQ simulation; reproducibility; Wisconsin Diagnostic Breast Cancer.
+
+\section{Introduction}
+\label{sec:intro}
+
+Support vector machines with radial-basis kernels remain competitive on small-to-moderate biomedical tables because they control capacity through a regularised maximum-margin problem in a reproducing kernel Hilbert space~\cite{cortes1995support,boser1992training,scholkopf2002learning}. Quantum kernels replace the classical inner product with a fidelity estimated from a parameterised feature map~\cite{havlicek2019quantum,schuld2019quantum,schuld2021supervised}. Interest in such kernels is scientific rather than automatic: quantum feature maps can be classically hard in some regimes~\cite{havlicek2019quantum,huang2021power}, yet medical tabular data need not possess that structure.
+
+The Wisconsin Diagnostic Breast Cancer (\wdbc) set is a public, fully labelled, $N=569$ benchmark derived from nuclear morphometric features of fine-needle aspirates~\cite{street1993nuclear,mangasarian1995breast}. It is useful as a computational benchmark, not as a surrogate for prospective clinical validation.
+
+Reproducibility requires more than matching a table to three decimals~\cite{pineau2021improving,kapoor2023leakage}. Source-code behaviour should be examined independently of paper prose. Statistical methodology matters because 10-fold scores are dependent~\cite{dietterich1998approximate,nadeau2003inference} and because many pairwise tests inflate family-wise error~\cite{holm1979simple}. Simulated NISQ claims require circuit-level verification: a depolarising channel applied to a different topology is not the same experiment as noisy execution of the clean kernel.
+
+This report therefore distinguishes six categories that are not interchangeable:
+\begin{enumerate}[label=\textbf{\Alph*.}]
+  \item paper claims of \papername;
+  \item behaviour of the released source at commit \texttt{23c89d3};
+  \item our independent reproduction of that executable pipeline;
+  \item our independent audit of methodology and artefacts;
+  \item audit-defined corrected experiments;
+  \item optional future work.
+\end{enumerate}
+
+\paragraph{Research questions.}
+\begin{description}[style=nextline,leftmargin=2.2em]
+  \item[RQ1] How closely can the \wdbc\ results be independently reproduced?
+  \item[RQ2] Are the paper's described circuits consistent with the released executable circuits?
+  \item[RQ3] Does the released implementation actually implement adaptive subset/model selection?
+  \item[RQ4] How do the quantum ensemble results compare with classical baselines under fair tuning?
+  \item[RQ5] Are statistical conclusions robust to multiplicity, fold dependence, preprocessing protocol, and CV seed?
+  \item[RQ6] Are calibration, XAI, and noise claims supported by the implementation?
+\end{description}
+
+\section{Research motivation}
+\label{sec:motivation}
+
+Three practical questions motivate an independent \wdbc\ study. First, quantum-kernel pipelines are expensive to recompute; cached Gram matrices must be checked against closed forms and against PSD/symmetry diagnostics. Second, ensemble and stacking claims can hide selection leakage~\cite{wolpert1992stacked,varma2006bias,cawley2010overfitting,kapoor2023leakage}. Third, clinical-sounding language (calibration, XAI, NISQ robustness) can outrun the executable protocol. The motivation is methodological: to map what matched, what differed, what we added, and what the evidence does not establish.
+
+\section{Statement of scope and evidence categories}
+\label{sec:scope}
+
+\begin{center}
+\fbox{\parbox{0.92\textwidth}{\sffamily\bfseries All empirical analyses in this report are restricted to \wdbc\ unless explicitly stated otherwise.}}
+\end{center}
+
+\Cref{fig:evidence-hierarchy} summarises why paper text, released code, reproduction, audit, and corrected experiments must not be conflated.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.42cm,
+  every node/.style={font=\sffamily\small}
+]
+\node[auditnode, text width=7.2cm] (p) {Paper claim};
+\node[auditnode, text width=7.2cm, below=of p] (s) {Released source};
+\node[rnode, text width=7.2cm, below=of s] (r) {Independent reproduction};
+\node[qnode, text width=7.2cm, below=of r] (a) {Independent audit};
+\node[cnode, text width=7.2cm, below=of a] (c) {Audit-defined corrected experiment};
+\node[annode, text width=7.2cm, below=of c] (e) {Evidence-graded conclusion};
+\draw[fatarrow] (p) -- (s);
+\draw[fatarrow] (s) -- (r);
+\draw[fatarrow] (r) -- (a);
+\draw[fatarrow] (a) -- (c);
+\draw[fatarrow] (c) -- (e);
+\end{tikzpicture}
+\caption{Evidence hierarchy used throughout this report. These layers are not interchangeable.}
+\label{fig:evidence-hierarchy}
+\end{figure}
+
+\section{Literature review}
+\label{sec:lit}
+
+\subsection{Classical machine learning for \wdbc\ and small medical datasets}
+
+\wdbc\ arose from computer-assisted cytometric analysis of breast FNA nuclei~\cite{street1993nuclear,wolberg1995breast,mangasarian1995breast}. With $N=569$ and $D=30$, linear and kernel methods, trees, and ensembles are all feasible. The majority-class rate is $357/569=0.6274$ (benign). High accuracy is therefore expected from strong classical models; incremental gains must be interpreted against that ceiling and against class encoding (here class~1 is benign).
+
+\subsection{Support vector machines and RBF kernels}
+
+The hard-margin SVM~\cite{boser1992training} and soft-margin formulation~\cite{cortes1995support} remain standard. Gaussian RBF kernels $K(x,z)=\exp(-\gamma\|x-z\|^2)$ induce a smooth similarity on $\mathbb{R}^d$~\cite{scholkopf2002learning}. In scikit-learn, \texttt{SVC(kernel='rbf', C=1, gamma='scale')} is a documented default configuration~\cite{pedregosa2011scikit}.
+
+\subsection{Quantum kernel methods}
+
+A quantum feature map $U(x)$ prepares $\lvert\phi(x)\rangle$; a kernel is typically the fidelity
+\begin{equation}
+K(x,z)=\lvert\langle\phi(x)\lvert\phi(z)\rangle\rvert^2,
+\label{eq:fid}
+\end{equation}
+estimated by embedding $x$, uncomputing $z$, and reading the all-zero probability~\cite{havlicek2019quantum,schuld2019quantum}. Many supervised QML models are kernel methods in this sense~\cite{schuld2021supervised}. Advantage is data-dependent~\cite{huang2021power}.
+
+\subsection{Quantum SVM and precomputed quantum-kernel classification}
+
+Rebentrost et al.\ analysed a quantum algorithm for SVM in a different computational model~\cite{rebentrost2014quantum}. The pipeline audited here is the practical NISQ-era hybrid: precompute a Gram matrix on a simulator, then fit a classical SVM on that kernel~\cite{havlicek2019quantum,bergholm2018pennylane,pedregosa2011scikit}.
+
+\subsection{Quantum $k$-NN and kernel-distance approaches}
+
+Cover and Hart established nearest-neighbour classification~\cite{cover1967nearest}. Quantum distance classifiers can use interference to score similarity~\cite{schuld2017implementing}. In the released implementation, QKNN is a classical $k$-NN operating on distances derived from the quantum kernel matrix, not a hardware interference circuit.
+
+\subsection{Ensemble learning and stacking}
+
+Bagging~\cite{breiman1996bagging}, random forests~\cite{breiman2001random}, gradient-boosted trees~\cite{chen2016xgboost}, and stacked generalisation~\cite{wolpert1992stacked} combine base learners. Leakage-free stacking requires that meta-features for a sample not use that sample's training-fold labels~\cite{wolpert1992stacked,kapoor2023leakage}.
+
+\subsection{Nested cross-validation and leakage-free preprocessing}
+
+Fitting scalers or PCA on the full dataset before CV is a leakage pattern~\cite{kapoor2023leakage}. Nested CV reduces selection bias when models or subsets are chosen using inner scores~\cite{varma2006bias,cawley2010overfitting}. PCA itself is a linear variance decomposition~\cite{jolliffe2016pca}.
+
+\subsection{Multiple hypothesis testing and Holm correction}
+
+Holm's sequentially rejective procedure controls family-wise error more powerfully than Bonferroni~\cite{holm1979simple}. McNemar's test compares paired binary correctness~\cite{mcnemar1947note,dietterich1998approximate}; it is not a test of precision, recall, or specificity.
+
+\subsection{Calibration of probabilistic classifiers}
+
+Platt scaling maps SVM scores to probabilities~\cite{platt1999probabilistic}. Reliability diagrams, Brier score~\cite{brier1950verification}, and expected calibration error~\cite{naeini2015obtaining,niculescu2005predicting} quantify calibration. scikit-learn's \texttt{CalibratedClassifierCV} can calibrate \texttt{decision\_function} when available~\cite{pedregosa2011scikit}.
+
+\subsection{Explainable AI and attribution stability}
+
+SHAP provides additive feature attributions with game-theoretic axioms~\cite{lundberg2017unified}. LIME fits local surrogate models~\cite{ribeiro2016why}. Rank agreement among coefficient magnitude, SHAP, and permutation importance on linear meta-features is expected when the model is essentially linear in those features.
+
+\subsection{NISQ noise simulation and circuit topology}
+
+Preskill's NISQ framing emphasises limited fidelity and connectivity~\cite{preskill2018quantum}. Depolarising channels are phenomenological simulator knobs, not automatically measured hardware error rates. Topology (all-to-all versus a path graph) changes two-qubit gate count and the implemented kernel.
+
+\subsection{Reproducibility and open-source research}
+
+Open code is necessary but not sufficient~\cite{pineau2021improving}. PennyLane provides differentiable quantum circuits~\cite{bergholm2018pennylane}; autodiff can still be severed by Python-level collection of QNode outputs. Barren-plateau theory~\cite{mcclean2018barren} should not be inferred from a zero-gradient autodiff defect.
+
+\section{Daga et al.\ (2026) methodology}
+\label{sec:daga-methods}
+
+As described in the paper, the clinical pipeline (category~A) comprises: (i)~standardisation, PCA to eight components, and scaling into a quantum-compatible interval; (ii)~multiple quantum feature maps; (iii)~QSVM and QKNN base learners plus classical comparators; (iv)~selection among base models; (v)~hard voting and OOF logistic stacking; (vi)~optional VQC, calibration, XAI, and noise studies; (vii)~evaluation on several datasets, of which only \wdbc\ is in our empirical scope.
+
+\section{Released repository implementation}
+\label{sec:released}
+
+Category~B is the executable at commit \texttt{23c89d3}~\cite{daga2026repo}. Primary file \texttt{quantum\_clinical\_github.py} defines:
+\begin{itemize}
+  \item \texttt{qml.AngleEmbedding} on 8~wires (PennyLane default rotation axis $X$ in the tested configuration);
+  \item \texttt{qml.IQPEmbedding} on 8~wires (all-to-all pattern in the clean kernel);
+  \item \texttt{qml.AmplitudeEmbedding} on 3~wires with normalisation;
+  \item QSVM/QKNN on precomputed kernels; classical RBF, RF, XGBoost, and classical stacking;
+  \item hardcoded \texttt{BASE\_MODEL\_NAMES} at line~787;
+  \item \texttt{qnn\_cost} collecting QNode outputs in a Python list;
+  \item a separate noisy-circuit path using \texttt{default.mixed}.
+\end{itemize}
+\texttt{base\_model\_selection\_mcnemar.py} prints McNemar tables; it does not write a selected quartet back into the stacking script.
+
+\section{Our independent implementation}
+\label{sec:ours}
+
+Category~C re-executes the released non-VQC \wdbc\ pipeline without modifying original research files. Category~D inspects circuits, statistics, and artefacts. Category~E adds fold-local preprocessing, nested 4-of-6 selection, Holm families, nested classical tuning, calibration/XAI/noise/seed audits, and a graph-preserving VQC gradient test. Cached Gram matrices in \texttt{checkpoints/} were used after independent structural and closed-form checks.
+
+\input{tex/diagrams}
+
+\input{tex/plots}
+
+\input{tex/comparison}
+
+\input{tex/methods}
+
+\input{tex/audits}
+
+\input{tex/results}
+
+\input{tex/discussion}
+
+\input{tex/appendix}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

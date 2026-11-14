@@ -1,0 +1,24 @@
+% discussion.tex - Methodological Synthesis and Scientific Implications
+\section{Discussion and Scientific Implications}
+\label{sec:discussion-synthesis}
+
+\subsection{Summary of Replicability and Discrepancies}
+The empirical investigation conducted in this audit establishes that the clean non-VQC baseline results reported by Daga et al.\ (2026) are numerically reproducible to three decimal places from the released codebase under random seed 42. Specifically, the quantum Gram matrices for Angle, ZZ, and Amplitude kernels satisfy all theoretical properties (exact symmetry, unit diagonals, and positive semi-definiteness), and the out-of-fold stacking procedure achieves $549/569 = 0.9649$ accuracy without label contamination.
+
+However, the scientific claims surrounding the methodology require substantial recalibration:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Absence of Dynamic Selection:} The claim of ``adaptive model selection via McNemar testing'' is not implemented programmatically. Instead, the meta-learner quartet is statically hardcoded at line 787. When subjected to an exhaustive nested CV search, the author's quartet is never selected, omitting the best-performing model, QSVM (Angle).
+  \item \textbf{Untrainability of the Variational Circuit:} The released VQC benchmark suffers from an Autograd disconnection bug caused by list comprehension over QNode evaluations. The parameter gradient norm is identically $0.0$, indicating that reported VQC performance corresponds to random circuit projections rather than trained representations.
+  \item \textbf{Inconsistent NISQ Simulation Topology:} The noise resilience reported in the paper does not reflect the clean $K_8$ circuit. Rather, the noise simulation script silently reduces the circuit to a 1D chain ($P_8$), eliminating $75\%$ of entangling gates. When subjected to $5\%$ depolarizing noise, the ZZ classifier completely collapses to the majority class. The ensemble maintains accuracy solely because the meta-learner prunes the damaged classifier.
+  \item \textbf{Algebraic Feature Cancellation in XAI:} The reported clinical feature rankings derived from composite attributions are mathematically equivalent to raw PCA eigenvector variance contributions, as the scalar meta-learner weights cancel identically upon $L_1$ normalization.
+\end{enumerate}
+
+\subsection{Absence of Quantum Advantage on WDBC}
+Under rigorous statistical standards—including 10-seed cross-validation, fair classical hyperparameter tuning, and family-wise error rate control via Holm-Bonferroni correction—there is zero statistically significant evidence of quantum superiority on the WDBC benchmark. Classical RBF-SVM achieves higher mean accuracy ($0.9731$) than the quantum stacking ensemble ($0.9670$) across 10 out of 10 independent seeds. Furthermore, all statistically significant findings across 32 pairwise comparisons demonstrate that individual quantum models perform significantly worse than the classical RBF baseline on clinical specificity and precision.
+
+\subsection{Threats to Validity and Scope Boundaries}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Dataset Restriction:} This audit evaluated the WDBC dataset exclusively. Findings on Parkinson's disease and Pima Indians Diabetes remain outside the empirical scope of this study.
+  \item \textbf{Simulator vs.\ Hardware:} All evaluations were performed on PennyLane's \texttt{default.qubit} statevector and \texttt{default.mixed} density-matrix simulators. True physical quantum hardware was not utilized.
+  \item \textbf{Gram Matrix Computation:} Precomputed Gram matrices were checked for structural integrity and numerical overlap consistency; recomputation of all $162{,}205$ circuit evaluations from scratch was not required.
+\end{itemize}

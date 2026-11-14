@@ -1,0 +1,171 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{datetime2}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{QML Audit Report --- Paper 01}
+\lhead{Autonomous ML Research Review}
+\cfoot{\thepage}
+
+\title{\textbf{Audit \& Reproduction Report}\\[0.4em]
+\large\textit{Paper 01: Early Detection of Diabetes with Quantum Machine Learning and Causal Inference Techniques}\\[0.3em]
+Upama et al., \textit{Machine Learning with Applications} 24 (2026) 100900}
+\author{Autonomous Senior ML Research Engineer}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+\section{Paper Overview}
+%---------------------------------------------------------------
+\subsection{Bibliographic Details}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Authors:} Upama et al.
+  \item \textbf{Venue:} Machine Learning with Applications, Vol.~24, 2026, Article 100900
+  \item \textbf{DOI:} 10.1016/j.mlwa.2026.100900
+  \item \textbf{Topic:} Quantum and classical machine learning for early-stage diabetes detection, augmented with causal inference feature selection.
+\end{itemize}
+
+\subsection{Goal}
+Develop an early diabetes detection pipeline that combines \textbf{LinearDML causal inference} (EconML) for feature selection with a suite of classical (SVM, Random Forest) and quantum (QSVM, Quantum-inspired RF) classifiers on the UCI Sylhet Early Stage Diabetes Risk Prediction dataset (id~529) and the Pima Indians Diabetes dataset.
+
+\subsection{Datasets}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Sylhet (UCI 529):} 520 rows, 16 categorical/binary features, binary outcome. Verified: \textbf{269 near-identical duplicate rows} exist, enabling trivial data-leakage under random stratified splits.
+  \item \textbf{Pima Indians Diabetes:} 768 rows, 8 continuous features, binary outcome. Used for generalization evaluation.
+\end{itemize}
+
+\subsection{Preprocessing \& Feature Selection}
+\begin{enumerate}[leftmargin=*]
+  \item Label encoding of categorical columns.
+  \item \textbf{LinearDML} (EconML) individual treatment effects estimated \emph{on the full dataset before any split} --- this constitutes a data-leakage step.
+  \item Top 10 of 16 features selected by DML coefficient magnitude.
+  \item Cross-check via Student $t$-test and Cohen's $d$ effect size (also run on full data --- additional leakage).
+\end{enumerate}
+
+\subsection{Model Architectures}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Linear SVM:} scikit-learn \texttt{LinearSVC}.
+  \item \textbf{Classical RF:} 100 trees, unlimited depth.
+  \item \textbf{Quantum RF (Paper):} Depth-capped classical RF (max\_depth=5) --- \textbf{NOT quantum}; the depth cap is presented as a quantum analogy without theoretical justification.
+  \item \textbf{QSVM:} Qiskit \texttt{ZZFeatureMap} + statevector-simulated precomputed kernel, \texttt{SVC(kernel='precomputed')}.
+\end{itemize}
+
+\subsection{Validation Protocol (Paper)}
+Single 80/20 stratified train-test split on 520 samples (test = 104 samples). No cross-validation. No variance estimates reported.
+
+\subsection{Reported Metrics}
+\begin{table}[h!]
+  \centering
+  \caption{Paper-reported accuracy on Sylhet (test split, n=104)}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Model} & \textbf{Accuracy} & \textbf{AUC}\\
+    \midrule
+    Linear SVM & 97.1\% & Not reported\\
+    Classical RF & 98.1\% & Not reported\\
+    Quantum RF (depth-capped) & 98.1\% & Not reported\\
+    QSVM (ZZFeatureMap) & 98.1\% & Not reported\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+%---------------------------------------------------------------
+\section{Red Flags \& Methodological Audit}
+%---------------------------------------------------------------
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Duplicate-induced leakage:} 269 of 520 rows are near-identical duplicates. Under random stratified splitting, test rows are trivially found in the training set (cosine similarity $>0.99$), inflating accuracy artificially. This alone can explain 97--98\% accuracy on a dataset where the clean Bayes error rate is approximately 10--15\%.
+  \item \textbf{Causal feature selection leakage:} LinearDML \emph{and} $t$-tests are applied to the full 520-row dataset before any train/test split, violating the principle of no information leakage from test data into feature engineering.
+  \item \textbf{Quantum RF is not quantum:} The paper terms a depth-capped classical RF (max\_depth=5) a ``Quantum Random Forest'' drawing an analogy to quantum circuit depth. This is terminologically misleading; no quantum operations are performed.
+  \item \textbf{Single split, no variance:} With only 104 test samples and a single split, the 95\% confidence interval on accuracy of 98.1\% is approximately $\pm 2.6\%$ by the Wilson interval, making the quantum/classical difference statistically indistinguishable.
+  \item \textbf{Poor Pima generalization:} The paper reports 65--76\% accuracy on Pima, which aligns with the dataset's well-known Bayes ceiling. The gap between Sylhet (98\%) and Pima (76\%) is a strong indicator that the Sylhet results are inflated by duplication leakage.
+\end{enumerate}
+
+%---------------------------------------------------------------
+\section{Faithful Reimplementation Details}
+%---------------------------------------------------------------
+We reimplemented the full pipeline in \texttt{notebooks/01\_upama\_causal\_qml.ipynb}:
+\begin{itemize}[leftmargin=*]
+  \item LinearDML feature selection replicated using EconML with \texttt{LinearDML} and the same number of splits.
+  \item ZZ kernel QSVM replicated using PennyLane \texttt{ZZFeatureMap}-equivalent circuit (without Qiskit, using \texttt{qml.kernels.kernel\_matrix}).
+  \item Executed on the same 80/20 split for fair reproduction.
+  \item Additionally ran a \textbf{grouped stratified CV} that prevents any near-duplicate row in the training fold from appearing in the test fold.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Results: Paper-Claimed vs.\ Reproduced vs.\ Leakage-Free}
+%---------------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{Accuracy comparison: Claimed vs.\ Reproduced (Sylhet dataset)}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Model} & \textbf{Paper} & \textbf{Reproduced (Random Split)} & \textbf{Leakage-Free (Grouped 5-Fold CV)}\\
+    \midrule
+    Linear SVM          & 97.1\% & 87.5\% & 82.88 $\pm$ 5.69\%\\
+    Classical RF        & 98.1\% & 97.1\% & 83.46 $\pm$ 5.59\%\\
+    Quantum RF (depth)  & 98.1\% & 94.2\% & 79.23 $\pm$ 8.99\%\\
+    QSVM (ZZFeatureMap) & 98.1\% & 76.0\% & 71.15 $\pm$ 8.62\%\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \caption{Transfer to Pima Indians Diabetes (5-fold stratified CV)}
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Model} & \textbf{Pima 5-Fold CV Accuracy}\\
+    \midrule
+    Linear SVM   & 77.08 $\pm$ 1.57\%\\
+    Classical RF & 76.69 $\pm$ 1.45\%\\
+    Quantum RF   & 75.52 $\pm$ 2.18\%\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Quantified Inflation}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{RF inflation due to duplicate leakage:} 98.1\% (paper) vs.\ 83.5\% (grouped CV) = \textcolor{red}{\textbf{+14.6 percentage points}} inflated.
+  \item \textbf{QSVM reproduction gap:} 98.1\% (paper) vs.\ 71.2\% (grouped CV) = \textcolor{red}{\textbf{+26.9 pp}} inflated.
+  \item Pima generalization confirms the 75--78\% ceiling; quantum methods provide no statistically significant improvement over linear baselines at this sample size and qubit count.
+\end{itemize}
+
+%---------------------------------------------------------------
+\section{Conclusion}
+%---------------------------------------------------------------
+The Upama et al.\ (2026) results are severely inflated by:
+\begin{enumerate}
+  \item Duplicate-row leakage in the Sylhet dataset (269/520 near-identical rows).
+  \item Full-dataset feature selection before any train/test split.
+  \item A single non-repeated test split with no variance estimate.
+\end{enumerate}
+After correcting all three sources of leakage, the best achievable accuracy on Sylhet under grouped cross-validation is approximately \textbf{83.5\%} for RF and \textbf{71.2\%} for QSVM --- reductions of 14--27 percentage points. The Pima transfer results (75--77\%) confirm that quantum feature maps provide no advantage over classical RBF-SVM at this scale.
+
+\vspace{1em}
+\noindent\textbf{Recommendation:} The paper's results cannot be reproduced without access to the exact duplicate-containing train/test split. The QSVM claim of 98.1\% is unreproducible and should be treated as an artifact of the dataset's duplication structure, not a genuine quantum advantage.
+
+\appendix
+\section{Artifacts}
+\begin{itemize}
+  \item Notebook: \texttt{notebooks/01\_upama\_causal\_qml.ipynb}
+  \item Metrics CSV: \texttt{results/paper01\_upama\_metrics.csv}
+  \item Figure: \texttt{results/fig\_paper01\_performance.png}
+\end{itemize}
+
+\end{document}

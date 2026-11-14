@@ -1,0 +1,5 @@
+Metric,Paper_Reported,Faithful_Reproduction,Corrected_Clean_Real,Gap_vs_Clean
+OOF F1-Score,0.8933 +/- 0.008,0.9342,0.6186,+0.3156
+OOF ROC-AUC,0.8699 +/- 0.012,0.9631,0.8284,+0.1347
+Accuracy,Not Claimed,90.75%,75.91%,+14.84%
+Brier Score,Not Reported,0.0685,0.1600,-0.0915

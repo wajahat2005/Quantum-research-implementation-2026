@@ -1,0 +1,5 @@
+\begin{tikzpicture}\begin{axis}[xbar,width=0.8\linewidth,height=8cm,xmin=0.6,xmax=1.02,/pgf/bar width=5pt,symbolic y coords={ZZ QSVM full,ZZ QSVM linear,Z QSVM,Amplitude QSVM,LightGBM GIF,Kotha RF,Random Forest,RBF-SVM,Stacking Daga,Angle QSVM},ytick=data,y dir=reverse,yticklabel style={font=\scriptsize},xticklabel style={font=\scriptsize},xlabel={accuracy on Sylhet},legend style={at={(0.5,-0.18)},anchor=north,legend columns=2,font=\scriptsize},nodes near coords,nodes near coords style={font=\tiny,/pgf/number format/.cd,fixed,precision=2},point meta=x]
+\addplot[fill=cp,draw=none] coordinates {(0.942,ZZ QSVM full) (0.952,ZZ QSVM linear) (0.981,Z QSVM) (0.919,Amplitude QSVM) (0.962,LightGBM GIF) (0.990,Kotha RF) (0.981,Random Forest) (0.973,RBF-SVM) (0.963,Stacking Daga) (0.948,Angle QSVM)};
+\addplot[fill=cc,draw=none] coordinates {(0.721,ZZ QSVM full) (0.733,ZZ QSVM linear) (0.790,Z QSVM) (0.823,Amplitude QSVM) (0.869,LightGBM GIF) (0.925,Kotha RF) (0.930,Random Forest) (0.928,RBF-SVM) (0.924,Stacking Daga) (0.888,Angle QSVM)};
+\legend{paper-style split (duplicates leak),clean grouped split}
+\end{axis}\end{tikzpicture}

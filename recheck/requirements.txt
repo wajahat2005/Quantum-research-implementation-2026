@@ -1,0 +1,23 @@
+# Core dependencies for Adaptive Quantum Kernel Selection Recheck Pipeline
+numpy==2.2.6
+scipy==1.14.1
+pandas==3.0.6
+scikit-learn==1.9.1
+lightgbm==4.7.0
+xgboost==3.2.0
+torch==2.14.1+cpu
+pennylane==0.44.1
+pennylane_lightning==0.44.0
+qiskit==2.6.1
+econml==0.17.0
+shap==0.46.0
+lime==0.2.0.1
+optuna==5.0.0
+statsmodels==0.14.4
+matplotlib==3.11.2
+seaborn==0.13.2
+nbformat==5.11.1
+nbconvert==7.17.2
+jupyter_core==5.9.1
+ipywidgets==8.1.9
+pypdf==6.19.0

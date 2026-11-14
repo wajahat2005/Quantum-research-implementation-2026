@@ -1,0 +1,39 @@
+paper,dataset,metric,claimed_value,page_table_figure,exact_context,split_protocol
+Paper 01 (Upama et al. 2026),Sylhet (UCI 529),Accuracy (Classical SVM),0.9231,"Page 8, Fig. 8(a), Fig. 10","Linear kernel SVM, 10 selected features via LinearDML","Single 80/20 train/test split (416 train, 104 test)"
+Paper 01 (Upama et al. 2026),Sylhet (UCI 529),Accuracy (Classical RF),0.9712,"Page 8, Fig. 8(b), Fig. 10","100 trees classical Random Forest, 10 selected features","Single 80/20 train/test split (416 train, 104 test)"
+Paper 01 (Upama et al. 2026),Sylhet (UCI 529),Accuracy (QSVM),0.9712,"Page 8, Fig. 8(c), Fig. 10",Qiskit ZZFeatureMap + statevector precomputed kernel SVM,"Single 80/20 train/test split (416 train, 104 test)"
+Paper 01 (Upama et al. 2026),Sylhet (UCI 529),Accuracy (Quantum RF),0.9615,"Page 8, Fig. 8(d), Fig. 10",Depth-capped classical RF mimicking shallow quantum circuits,"Single 80/20 train/test split (416 train, 104 test)"
+Paper 01 (Upama et al. 2026),Pima Indians Diabetes,Accuracy (Classical SVM),0.7200,"Page 9, Fig. 13",Linear kernel SVM on 7 causal features,Single 80/20 train/test split
+Paper 01 (Upama et al. 2026),Pima Indians Diabetes,Accuracy (QSVM),0.6500,"Page 9, Fig. 13",ZZFeatureMap QSVM on 7 causal features,Single 80/20 train/test split
+Paper 01 (Upama et al. 2026),Pima Indians Diabetes,Accuracy (Classical RF),0.7600,"Page 9, Fig. 13",100 trees classical RF on 7 causal features,Single 80/20 train/test split
+Paper 01 (Upama et al. 2026),Pima Indians Diabetes,Accuracy (Quantum RF),0.7200,"Page 9, Fig. 13",Depth-capped classical RF on 7 causal features,Single 80/20 train/test split
+Paper 02 (Young 2025),Pima + 2000 GMM Synthetic,OOF F1-score,0.8933 +- 0.008,"Page 1, Abstract; Page 6, Sec 5; Fig 1","QISICGM stacked ensemble (phase map, concept graph, LR meta-learner)","5-fold out-of-fold (OOF) cross-validation on 2,768 samples"
+Paper 02 (Young 2025),Pima + 2000 GMM Synthetic,OOF ROC-AUC,0.8699 +- 0.012,"Page 1, Abstract; Page 6, Sec 5; Fig 1",QISICGM stacked ensemble with isotonic calibration,"5-fold out-of-fold (OOF) cross-validation on 2,768 samples"
+Paper 02 (Young 2025),Pima + 2000 GMM Synthetic,F1-score (Random Forest baseline),0.8210,"Page 7, Sec 5",Baseline classical Random Forest cited comparison,5-fold CV
+Paper 02 (Young 2025),Pima + 2000 GMM Synthetic,ROC-AUC (Random Forest baseline),0.8030,"Page 7, Sec 5",Baseline classical Random Forest cited comparison,5-fold CV
+Paper 03 (Kotha et al. 2026),Pima Indians Diabetes,ROC-AUC,1.00,"Page 4, Fig. 3",Random Forest Classifier ROC curve plot showing horizontal line at TPR=1.0,Holdout test set of 150 instances (~20% split)
+Paper 03 (Kotha et al. 2026),Pima Indians Diabetes,Confusion Matrix,"TN=90, FP=10, FN=15, TP=35","Page 4, Fig. 4","Random Forest test set confusion matrix (Acc=83.33%, 25 total errors)",Holdout test set of 150 instances
+Paper 03 (Kotha et al. 2026),Pima Indians Diabetes,Accuracy,0.8333 (implied from Fig. 4),"Page 4, Fig. 4",(90 + 35) / 150 = 83.33% from published confusion matrix,Holdout test set of 150 instances
+Paper 04 (Zhang et al. 2025),Private Huawei Voice (Noise benchmark),G-mean @ 40% noise,> 0.60,"Page 10, Table VIII / Fig. 4",DeSCN-GIF under extreme label noise corruption,10-fold cross-validation with synthetic noise injection
+Paper 04 (Zhang et al. 2025),Diabetes Adaptation (Pima/Sylhet),Mathematical Model Formulation,"Eq 14, 16, 18, 20, 21","Pages 5-6, Eq. 14, 16, 18, 20, 21","GIF membership mu_i, nonmembership nu_i, hesitation pi_i, score Theta_i, supervisory inequality",Adapted to diabetes benchmarks with 0/5/10/20/40% noise
+Paper 05 (Kiran et al. 2025),Pima Indians Diabetes,Accuracy (Abstract headline),0.9970 (99.7%),"Page 1, Abstract",HQCAN-BSTOA claimed prediction accuracy,Claimed 80/20 split (Page 3 Sec III.A)
+Paper 05 (Kiran et al. 2025),Pima Indians Diabetes,Error Rate,0.0400 (4%),"Page 1, Abstract; Page 4 Sec IV",Claimed error rate 4% (mathematically contradicts 99.7% accuracy),80/20 split
+Paper 05 (Kiran et al. 2025),Pima Indians Diabetes,Accuracy (Section IV text),0.9950 (99.5%),"Page 4, Sec IV","Text reports accuracy of 99.5% with precision 99.5%, recall 99.3%, specificity 99.4%",80/20 split
+Paper 05 (Kiran et al. 2025),Pima Indians Diabetes,Testing Accuracy (Fig 3 text),0.9890 (98.9%),"Page 5, Sec IV text referencing Fig 3",Text states testing accuracy of 98.9% and training accuracy of 99.6%,80/20 split
+Paper 05 (Kiran et al. 2025),Pima Indians Diabetes,Accuracy (Conclusion),0.9980 (99.8%),"Page 5, Conclusion",Conclusion claims high prediction accuracy of 99.8%,80/20 split
+Paper 06 (Sodar et al. 2026),ISCX-URL2016 (Network),Accuracy (Angle-QSVM),0.8933 - 0.8967,"Page 26, Table 4","QSVM with Angle encoding (Ry rotations), gamma auto/scale",Single 70/30 train/test split point estimate
+Paper 06 (Sodar et al. 2026),ISCX-URL2016 (Network),Accuracy (Amplitude-QSVM),0.8867 - 0.8967,"Page 26, Table 4","QSVM with Amplitude encoding, gamma auto/scale",Single 70/30 train/test split point estimate
+Paper 06 (Sodar et al. 2026),ISCX-URL2016 (Network),Accuracy (Angle-QKNN),0.8967 - 0.9233,"Page 26, Table 4","QKNN with Angle encoding, k=5 and k=15",Single 70/30 train/test split point estimate
+Paper 06 (Sodar et al. 2026),ISCX-URL2016 (Network),Accuracy (Amplitude-QKNN),0.7700 - 0.8233,"Page 26, Table 4","QKNN with Amplitude encoding, k=5 and k=15",Single 70/30 train/test split point estimate
+Paper 07 (Yadav et al. 2026),WDBC (Proxy: Zenodo repository),Accuracy (QSVM Z-map),0.9298 (CV) / 0.9386 (Ext),"Pages 22-23, Tables 7 & 8",QSVC with ZFeatureMap on normalized 2D/PCA features,5-fold CV and holdout test set
+Paper 07 (Yadav et al. 2026),WDBC (Proxy: Zenodo repository),Accuracy (QSVM ZZ-map),0.8860 (CV) / 0.9123 (Ext),"Pages 22-23, Tables 7 & 8",QSVC with ZZFeatureMap,5-fold CV and holdout test set
+Paper 07 (Yadav et al. 2026),WDBC (Proxy: Zenodo repository),Accuracy (QSVM Pauli-map),0.9123 (CV) / 0.9298 (Ext),"Pages 22-23, Tables 7 & 8",QSVC with PauliFeatureMap,5-fold CV and holdout test set
+Paper 07 (Yadav et al. 2026),WDBC (Proxy: Zenodo repository),Accuracy (Hybrid QSVM+QNN),Up to 0.9600 (96%),"Page 28, 30; Tables 11 & 12",Kernel feature extraction feeding EstimatorQNN VQC,5-fold CV and holdout test set
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (Classical RBF),"0.758 [0.730, 0.786]","Page 18, Table 9",Classical RBF-SVM baseline on PCA-reduced features,"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (QSVM Angle),"0.763 [0.736, 0.790]","Page 18, Table 9",Angle encoding QSVM (Ry rotations),"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (QSVM ZZ Map),"0.759 [0.730, 0.788]","Page 18, Table 9",ZZFeatureMap QSVM (all-to-all entanglement),"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (QSVM Amplitude),"0.763 [0.737, 0.789]","Page 18, Table 9",Amplitude encoding QSVM (state preparation),"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (Pure QNN / VQC),"0.540 [0.508, 0.576]","Page 18, Table 9",Pure Variational Quantum Classifier (barren plateau failure),"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Accuracy (OOF Stacking),"0.766 [0.737, 0.796]","Page 18, Table 9",Adaptive OOF stacking ensemble with Logistic Regression meta-learner,"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,Recall (OOF Stacking),"0.621 [0.560, 0.675]","Page 18, Table 9",OOF Stacking ensemble recall (+6.8% over Classical RBF 0.553),"10-fold nested CV with 1,000-iteration bootstrap"
+Paper 08 (Daga et al. 2026),Pima Indians Diabetes,ROC-AUC (OOF Stacking),0.734,"Page 20, Table 10",OOF Stacking ensemble ROC-AUC,10-fold nested CV

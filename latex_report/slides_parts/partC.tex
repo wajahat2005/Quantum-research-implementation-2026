@@ -1,0 +1,244 @@
+% ---- chunk C helpers (colour of a cell = how good the balanced accuracy is) ----
+\providecommand{\cbaC}[1]{%
+  \ifdim#1pt<0.55pt\cellcolor{qcrimson!30}\else
+  \ifdim#1pt<0.65pt\cellcolor{qamber!35}\else
+  \ifdim#1pt<0.80pt\cellcolor{qamber!12}\else
+  \ifdim#1pt<0.88pt\cellcolor{qgreen!20}\else\cellcolor{qgreen!38}\fi\fi\fi\fi#1}
+\providecommand{\tlC}[1]{\tikz[baseline=-0.6ex]\fill[#1] (0,0) circle (0.11);}
+
+% ==============================================================================
+% 1. Scoreboard (colour = how good)
+% ==============================================================================
+\begin{frame}{Scoreboard: Who Gets It Right?}
+  \begin{columns}[c]
+    \column{0.60\textwidth}
+      \centering
+      {\footnotesize\textbf{Balanced accuracy} (0.5 = coin flip, 1.0 = perfect)}\\[2pt]
+      \renewcommand{\arraystretch}{1.12}
+      \begin{tabular}{@{}l|cccc@{}}
+        \toprule
+        \textbf{Method} & \textbf{Pima} & \textbf{Sylhet} & \textbf{CDC} & \textbf{Hosp 130}\\
+        \midrule
+        RBF-SVM (classical)        & \cbaC{0.712} & \cbaC{0.923} & \cbaC{0.531} & \cbaC{0.500}\\
+        Random forest              & \cbaC{0.720} & \cbaC{0.925} & \cbaC{0.551} & \cbaC{0.500}\\
+        Random forest, tuned cut-off & \cbaC{0.741} & \cbaC{0.907} & \cbaC{0.721} & \cbaC{0.538}\\
+        Angle QSVM                 & \cbaC{0.711} & \cbaC{0.882} & \cbaC{0.500} & \cbaC{0.500}\\
+        ZZ QSVM (default)          & \cbaC{0.525} & \cbaC{0.653} & \cbaC{0.506} & \cbaC{0.500}\\
+        ZZ QSVM (tuned width)      & \cbaC{0.715} & \cbaC{0.848} & \cbaC{0.520} & \cbaC{0.500}\\
+        Amplitude QSVM             & \cbaC{0.530} & \cbaC{0.798} & \cbaC{0.500} & \cbaC{0.500}\\
+        Stacking of 4 kernels      & \cbaC{0.716} & \cbaC{0.923} & \cbaC{0.558} & \cbaC{0.500}\\
+        VQC (4 qubits)             & \cbaC{0.693} & \cbaC{0.736} & \cbaC{0.715} & \cbaC{0.536}\\
+        \midrule
+        Always guess biggest group & \cbaC{0.500} & \cbaC{0.500} & \cbaC{0.500} & \cbaC{0.500}\\
+        \bottomrule
+      \end{tabular}\\[3pt]
+      {\tiny colour key:\ \colorbox{qcrimson!30}{\,below 0.55\,}\ \colorbox{qamber!35}{\,0.55--0.65\,}\ \colorbox{qamber!12}{\,0.65--0.80\,}\ \colorbox{qgreen!20}{\,0.80--0.88\,}\ \colorbox{qgreen!38}{\,0.88 and up\,}}
+
+    \column{0.37\textwidth}
+      \begin{tikzpicture}[font=\scriptsize,c/.style={draw=none,rounded corners=3pt,text width=4.6cm,inner sep=4pt,align=left}]
+        \node[c,fill=qgreen!15](a){\tlC{qgreen} \textbf{Sylhet: easy}\\ Good models reach 0.89--0.93.};
+        \node[c,fill=qamber!15,below=3pt of a](b){\tlC{qamber} \textbf{Pima: a ceiling}\\ Good models stay at 0.71--0.74. Quantum Angle ties classical.};
+        \node[c,fill=qcrimson!12,below=3pt of b](d){\tlC{qcrimson} \textbf{CDC, Hosp 130: near chance}\\ Most models say ``healthy'' for everyone.};
+      \end{tikzpicture}
+  \end{columns}
+  \vfill
+  {\tiny RBF = radial basis function (a standard kernel); SVM = support vector machine; QSVM = quantum SVM (simulated); Angle / ZZ / Amplitude = three ways to load data into qubits; VQC = variational quantum classifier; CDC = US Centers for Disease Control health survey; Hosp 130 = hospital-stay data; Pima, Sylhet = two small diabetes datasets. Mean of 15 folds, clean protocol.}
+\end{frame}
+
+% ==============================================================================
+% 2. Full numbers
+% ==============================================================================
+\begin{frame}{The Full Numbers}
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{l|ccc|ccc|ccc|ccc}
+    \toprule
+    & \multicolumn{3}{c|}{\textbf{Pima} (768 rows)} & \multicolumn{3}{c|}{\textbf{Sylhet} (520)} & \multicolumn{3}{c|}{\textbf{CDC} (2,000)} & \multicolumn{3}{c}{\textbf{Hosp 130} (2,000)}\\
+    \textbf{Method} & BA & Rec & Spec & BA & Rec & Spec & BA & Rec & Spec & BA & Rec & Spec\\
+    \midrule
+    RBF-SVM            & \cbaC{0.712} & 0.556 & 0.869 & \cbaC{0.923} & 0.940 & 0.905 & \cbaC{0.531} & 0.071 & 0.990 & \cbaC{0.500} & 0.000 & 1.000\\
+    Logistic regression& \cbaC{0.726} & 0.571 & 0.881 & \cbaC{0.886} & 0.914 & 0.857 & \cbaC{0.577} & 0.180 & 0.974 & \cbaC{0.503} & 0.009 & 0.996\\
+    Random forest      & \cbaC{0.720} & 0.586 & 0.853 & \cbaC{0.925} & 0.943 & 0.908 & \cbaC{0.551} & 0.120 & 0.983 & \cbaC{0.500} & 0.000 & 0.999\\
+    RF, tuned cut-off  & \cbaC{0.741} & 0.760 & 0.722 & \cbaC{0.907} & 0.910 & 0.904 & \cbaC{0.721} & 0.748 & 0.694 & \cbaC{0.538} & 0.437 & 0.640\\
+    \midrule
+    Angle QSVM         & \cbaC{0.711} & 0.552 & 0.870 & \cbaC{0.882} & 0.918 & 0.846 & \cbaC{0.500} & 0.000 & 1.000 & \cbaC{0.500} & 0.000 & 1.000\\
+    ZZ QSVM (default)  & \cbaC{0.525} & 0.082 & 0.967 & \cbaC{0.653} & 0.985 & 0.322 & \cbaC{0.506} & 0.014 & 0.998 & \cbaC{0.500} & 0.000 & 1.000\\
+    ZZ QSVM (tuned)    & \cbaC{0.715} & 0.556 & 0.874 & \cbaC{0.848} & 0.878 & 0.817 & \cbaC{0.520} & 0.049 & 0.992 & \cbaC{0.500} & 0.000 & 1.000\\
+    Amplitude QSVM     & \cbaC{0.530} & 0.138 & 0.921 & \cbaC{0.798} & 0.903 & 0.693 & \cbaC{0.500} & 0.000 & 1.000 & \cbaC{0.500} & 0.000 & 1.000\\
+    Stacking (OOF)     & \cbaC{0.716} & 0.567 & 0.865 & \cbaC{0.923} & 0.929 & 0.917 & \cbaC{0.558} & 0.133 & 0.982 & \cbaC{0.500} & 0.000 & 1.000\\
+    VQC (4 qubits)     & \cbaC{0.693} & 0.691 & 0.695 & \cbaC{0.736} & 0.760 & 0.712 & \cbaC{0.715} & 0.714 & 0.716 & \cbaC{0.536} & 0.497 & 0.576\\
+    \midrule
+    Guess biggest group& \cbaC{0.500} & 0.000 & 1.000 & \cbaC{0.500} & 1.000 & 0.000 & \cbaC{0.500} & 0.000 & 1.000 & \cbaC{0.500} & 0.000 & 1.000\\
+    \bottomrule
+  \end{tabular}}
+  \vspace{4pt}
+
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[draw,rounded corners,fill=qcard,text width=0.93\textwidth,inner sep=4pt,align=left]{%
+      \textbf{How to read a row:} \textbf{BA} = score that treats sick and healthy people equally. \textbf{Rec} = share of sick people found. \textbf{Spec} = share of healthy people correctly cleared. \textcolor{qcrimson}{\textbf{Rec = 0.000}} means the model never says ``sick''.};
+  \end{tikzpicture}
+  \vfill
+  {\tiny BA = balanced accuracy (average of Rec and Spec); Rec = recall (sensitivity); Spec = specificity; RF = random forest (tuned cut-off = decision threshold chosen by inner cross-validation); OOF = out-of-fold; QSVM = quantum support vector machine; VQC = variational quantum classifier; RBF = radial basis function; SVM = support vector machine; CDC = US Centers for Disease Control survey data; Hosp = hospital. Mean of 15 folds (5 folds $\times$ 3 seeds). Hard voting, AUC and accuracy columns are in the report.}
+\end{frame}
+
+% ==============================================================================
+% 3. Fair comparison
+% ==============================================================================
+\begin{frame}{Is Any Model Really Better Than the Classical One?}
+  \begin{columns}[T]
+    \column{0.47\textwidth}
+      \begin{tikzpicture}[font=\scriptsize,x=1cm,y=1cm]
+        \node[anchor=west] at (0,2.5) {\textbf{Paired test (schematic, not real data)}};
+        \foreach \i/\a/\b in {0/1.2/1.1,1/1.0/1.1,2/1.3/1.2,3/1.1/1.0,4/1.2/1.3}{
+          \fill[qnavy] (0.35+0.85*\i,0) rectangle ++(0.28,\a);
+          \fill[qamber] (0.65+0.85*\i,0) rectangle ++(0.28,\b);
+        }
+        \draw (0,0)--(4.5,0);
+        \node at (2.2,-0.35){same 5 folds, scored twice};
+        \fill[qnavy] (0,-0.9) rectangle ++(0.25,0.18); \node[anchor=west] at (0.3,-0.81){classical RBF-SVM};
+        \fill[qamber] (2.5,-0.9) rectangle ++(0.25,0.18); \node[anchor=west] at (2.8,-0.81){another model};
+      \end{tikzpicture}\\[2pt]
+      \scriptsize Both models are scored on the \textbf{same} data splits. We ask whether the gap is bigger than luck.\\[3pt]
+      \begin{tikzpicture}[font=\scriptsize]
+        \node[draw=qamber,rounded corners,fill=qamber!10,text width=5.3cm,inner sep=4pt]{%
+          \textbf{Holm:} try many tests and a few look good by luck. Holm makes the bar higher, so lucky wins are not counted.};
+      \end{tikzpicture}
+
+    \column{0.51\textwidth}
+      {\footnotesize\textbf{Models compared with RBF-SVM} (36 tests per dataset)}\\[3pt]
+      \begin{tikzpicture}[font=\scriptsize,x=0.1cm]
+        \foreach \n/\w/\s/\b/\y in {Pima/9/0/27/0, Sylhet/6/0/30/-0.75, CDC/0/11/25/-1.5, {Hosp 130}/0/0/36/-2.25}{
+          \node[anchor=east] at (0,\y){\n};
+          \pgfmathsetmacro{\xa}{\w}
+          \pgfmathsetmacro{\xb}{\w+\b}
+          \pgfmathsetmacro{\xc}{\w+\b+\s}
+          \fill[qcrimson] (0.5,\y-0.25) rectangle (0.5+\xa,\y+0.25);
+          \fill[qslate!35] (0.5+\xa,\y-0.25) rectangle (0.5+\xb,\y+0.25);
+          \fill[qgreen] (0.5+\xb,\y-0.25) rectangle (0.5+\xc,\y+0.25);
+        }
+        \node[anchor=west,text=qcrimson] at (0.5,0.6){\textbf{worse}};
+        \node[anchor=west,text=qslate] at (14,0.6){\textbf{no clear difference}};
+        \node[anchor=west,text=qgreen] at (30,0.6){\textbf{better}};
+        \node[anchor=west] at (38.5,0){\textbf{9} / 27 / 0};
+        \node[anchor=west] at (38.5,-0.75){\textbf{6} / 30 / 0};
+        \node[anchor=west] at (38.5,-1.5){0 / 25 / \textbf{11}$^*$};
+        \node[anchor=west] at (38.5,-2.25){0 / 36 / 0};
+      \end{tikzpicture}\\[2pt]
+      {\tiny $^*$CDC ``better'' models only beat an RBF-SVM that finds 7\% of sick people. The cause is class weighting, not quantum or classical.}\\[4pt]
+      \begin{tikzpicture}
+        \node[draw=qgreen!60!black,fill=qgreen!15,rounded corners,text width=0.9\textwidth,inner sep=5pt,align=center]{\tlC{qgreen}\ \textbf{No model beats RBF-SVM on Pima, Sylhet or Hosp 130.}\\[1pt]\scriptsize The ``worse'' ones are mostly ZZ/Amplitude with default settings, plus guessing the biggest group.};
+      \end{tikzpicture}
+  \end{columns}
+  \vfill
+  {\tiny RBF = radial basis function; SVM = support vector machine; ZZ, Amplitude = quantum data-loading styles; CDC = US Centers for Disease Control survey data; Hosp = hospital. Test = Nadeau--Bengio corrected paired $t$-test (more cautious because folds share data) on balanced accuracy, Holm-adjusted per dataset. Counts from the checked report.}
+\end{frame}
+
+% ==============================================================================
+% 4. Claims in papers vs what we got
+% ==============================================================================
+\begin{frame}{Paper Claims vs What We Measured}
+  \centering
+  \renewcommand{\arraystretch}{1.18}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}l p{4.0cm} p{4.6cm} p{5.6cm} c@{}}
+    \toprule
+    \textbf{Paper} & \textbf{Claimed} & \textbf{We measured} & \textbf{Likely reason} & \\
+    \midrule
+    Upama (Sylhet) & 97.1\% accuracy (random forest) & 98.1\% on a random split, 91.8\% clean & 269 of 520 rows are repeats (251 distinct). Gap to our earlier 85.8\% grouped result is \textbf{not explained}. & \tlC{qamber}\\
+    Kotha (Pima) & 83.3\% accuracy, AUC 1.00 & 76.0\% accuracy, AUC 0.825 & With 25 errors in 150 rows, AUC cannot exceed 0.97. & \tlC{qcrimson}\\
+    Kiran (Pima) & 99.7\% accuracy & 67.5\% (paper-style), 69.4\% (clean) & Their own text says 4\% errors, so 96\% at most. & \tlC{qcrimson}\\
+    Daga (Pima) & Stacking 76.6\%; ZZ 75.9\%, Amplitude 76.3\% & Stacking 75.9\% (matches); ZZ 66.3\%, Amplitude 63.8\% & Possibly the authors' script settings. Not re-run. & \tlC{qamber}\\
+    Young (all four) & F1 0.8933 & CDC balanced acc. 0.951 $\to$ 0.622; Hosp 0.977 $\to$ 0.506 when made-up rows are removed & Test sets contain computer-made rows. Single run. & \tlC{qcrimson}\\
+    Sodar (Pima) & Amplitude QSVM advantage & Amplitude recall 0.138 (standardised) & Earlier audit: loses scale information. Not re-measured. & \tlC{qamber}\\
+    \bottomrule
+  \end{tabular}}
+  \vspace{3pt}
+
+  {\scriptsize \tlC{qcrimson} not reproduced \quad \tlC{qamber} partly reproduced or open \quad \tlC{qgreen} reproduced}
+  \vfill
+  {\tiny AUC = area under the ROC curve (1.0 = perfect ranking, 0.5 = chance); QSVM = quantum support vector machine; ZZ, Amplitude = quantum data-loading styles; F1 = a mix of precision and recall; CDC = US Centers for Disease Control survey data; Hosp = hospital-stay data. Zhang and Yadav papers use other data; only their methods were adapted. Accuracies from the report's paper-style (bootstrap) runs.}
+\end{frame}
+
+% ==============================================================================
+% 5. Project phases
+% ==============================================================================
+\begin{frame}{How This Run Compares With Earlier Work}
+  \begin{tikzpicture}[font=\scriptsize,node distance=0.5cm,b/.style={draw,rounded corners,align=center,text width=3.4cm,minimum height=1.2cm}]
+    \node[b,fill=qteal!15](a){\textbf{Phase 1}\\Rebuild Daga on Pima (108 numbers)};
+    \node[b,fill=qamber!15,right=of a](b2){\textbf{Phase 2}\\Desk check of 8 papers};
+    \node[b,fill=qgreen!15,right=of b2](c){\textbf{Phase 3}\\This run: 4 datasets};
+    \draw[-{Stealth},thick](a)--(b2);\draw[-{Stealth},thick](b2)--(c);
+  \end{tikzpicture}
+  \vspace{4pt}
+
+  \renewcommand{\arraystretch}{1.15}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}l p{4.3cm} p{4.6cm} c@{}}
+    \toprule
+    \textbf{Topic} & \textbf{Earlier phases} & \textbf{This run} & \\
+    \midrule
+    Kotha, Pima & 76.65\% accuracy, AUC 0.824 & 76.3\%, AUC 0.825 & \tlC{qgreen}\\
+    Yadav, Pima & ZZ 69.1\% vs Z 74.7\% & ZZ 65.8\% vs Z 75.1\% & \tlC{qgreen}\\
+    Kiran, Pima & VQC 65.0\% & 69.4\% (clean). Slightly higher, same story & \tlC{qgreen}\\
+    Young, Pima & Real patients: many false alarms & Balanced acc. 0.712, accuracy 0.663 vs 0.651 guess & \tlC{qgreen}\\
+    Upama, Sylhet & Grouped 85.8\% & Clean 91.8\%: 7 points higher, unexplained & \tlC{qamber}\\
+    Sodar, Pima & Amplitude recall 0.0 & 0.167 (MinMax), 0.138 (standardised) & \tlC{qamber}\\
+    Daga, Pima & Global kernel adds about 0.4\% & Gap $-0.002$: no inflation seen here & \tlC{qamber}\\
+    \bottomrule
+  \end{tabular}}
+  \vspace{3pt}
+
+  {\scriptsize \tlC{qgreen} same direction \quad \tlC{qamber} differs or unexplained}
+  \vfill
+  {\tiny AUC = area under the ROC curve; ZZ and Z = quantum data-loading styles; VQC = variational quantum classifier; MinMax = rescale each feature to 0--1; Pima, Sylhet = two small diabetes datasets. Earlier numbers from the project's discrepancy log.}
+\end{frame}
+
+% ==============================================================================
+% 6. Four tips
+% ==============================================================================
+\begin{frame}{Four Simple Tips}
+  \begin{tikzpicture}[font=\small,
+      card/.style={draw=none,rounded corners=4pt,text width=5.3cm,minimum height=2.0cm,inner sep=6pt,align=left}]
+    \node[card,fill=qnavy!10](a){\textbf{\Large 1}\ \textbf{Keep repeats apart}\\[2pt]\footnotesize Sylhet has 269 repeated rows out of 520 (52\%). Use grouped splits so a repeat never sits in both training and test.};
+    \node[card,fill=qteal!12,right=0.3cm of a](b){\textbf{\Large 2}\ \textbf{Report more than accuracy}\\[2pt]\footnotesize On CDC, ``always healthy'' already scores 86\% accuracy. Show balanced accuracy and recall too.};
+    \node[card,fill=qamber!15,below=0.3cm of a](c){\textbf{\Large 3}\ \textbf{Beat a tuned classical model}\\[2pt]\footnotesize Compare with a tuned RBF-SVM or random forest, not a weak default.};
+    \node[card,fill=qgreen!12,right=0.3cm of c](d){\textbf{\Large 4}\ \textbf{Prepare data inside each fold}\\[2pt]\footnotesize Fit scalers and kernels on training data only. (Here we saw no inflation from the authors' global kernel, but it is safer.)};
+  \end{tikzpicture}
+  \vfill
+  {\tiny RBF = radial basis function; SVM = support vector machine; CDC = US Centers for Disease Control survey data; Sylhet = small diabetes survey dataset.}
+\end{frame}
+
+% ==============================================================================
+% 7. Conclusion
+% ==============================================================================
+\begin{frame}{Conclusion}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{tikzpicture}[font=\small]
+        \node[draw=qgreen!60!black,fill=qgreen!12,rounded corners,text width=5.5cm,inner sep=6pt]{\tlC{qgreen}\ \textbf{Tuned classical models do as well as any quantum kernel we tried.}};
+      \end{tikzpicture}\\[3pt]
+      \begin{tikzpicture}[font=\small]
+        \node[draw=qamber!70!black,fill=qamber!12,rounded corners,text width=5.5cm,inner sep=6pt]{\tlC{qamber}\ \textbf{Quantum kernels need tuning.} Default ZZ and Amplitude fall to 0.53 on Pima.};
+      \end{tikzpicture}\\[3pt]
+      \begin{tikzpicture}[font=\small]
+        \node[draw=qcrimson!70!black,fill=qcrimson!10,rounded corners,text width=5.5cm,inner sep=6pt]{\tlC{qcrimson}\ \textbf{No quantum gain was significant.} Several high published scores come from repeated rows, made-up test rows, or cannot be reproduced.};
+      \end{tikzpicture}
+
+    \column{0.45\textwidth}
+      \begin{block}{Limits}
+        \scriptsize
+        \begin{itemize}
+          \item Qubits are simulated (at most 8).
+          \item CDC and Hosp 130 use 2,000-row subsamples, so tests are weaker.
+          \item Young and Zhang tables are single runs.
+          \item Only parts of the notebook code were read.
+          \item Daga and Upama explanations are untested; they need a Python machine.
+        \end{itemize}
+      \end{block}
+      \begin{exampleblock}{Next steps (from the report)}
+        \scriptsize Add an IQP kernel and a hard-vote stacker, then rerun; run Sylhet on its 251 distinct rows.
+      \end{exampleblock}
+  \end{columns}
+  \vfill
+  {\tiny ZZ, Amplitude = quantum data-loading styles; CDC = US Centers for Disease Control survey data; Hosp = hospital-stay data; IQP = a type of quantum circuit; Daga, Upama, Young, Zhang = authors of the audited papers. Code and data: repository \texttt{Adaptive-Quantum-Kernel-Selection}.}
+\end{frame}

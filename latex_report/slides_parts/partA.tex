@@ -1,0 +1,262 @@
+% ===== PART A (frames 1-9): plain-language, visual rewrite =====
+\title[Do quantum models help diagnose diabetes?]{Do Quantum Models Help Diagnose Diabetes?}
+\newcommand{\pAfoot}[1]{\vfill{\par\tiny\color{qslate}#1\par}}
+\tikzset{
+  pAcard/.style={draw=#1,fill=#1!8,rounded corners=4pt,line width=1pt,inner sep=4pt,text width=6.55cm,minimum height=2.3cm,anchor=north west,align=left,font=\scriptsize},
+  pAbx/.style={draw=#1,fill=#1!10,rounded corners=3pt,inner sep=4pt},
+  pAbxW/.style={draw=#1,fill=#1!10,rounded corners=3pt,inner sep=4pt,line width=0.8pt,minimum width=3.3cm,minimum height=0.7cm},
+  pAbxT/.style={draw=#1,fill=#1!10,rounded corners=3pt,inner sep=4pt,text width=4.0cm,align=center},
+  pAbxL/.style={draw=#1,fill=#1!10,rounded corners=3pt,inner sep=4pt,text width=7.6cm,align=left,anchor=north west},
+  pAbig/.style={font=\Large\bfseries}
+}
+\newcommand{\pAbig}{\Large\bfseries}
+
+% ------------------------------------------------------------------ 1 Title
+\begin{frame}[plain]
+  \vspace{0.6cm}
+  \begin{center}
+    {\usebeamercolor[fg]{structure}\LARGE\bfseries Do Quantum Models Help\\Diagnose Diabetes?\par}
+    \vspace{0.2cm}
+    {\large\color{qteal}\bfseries An independent check of 8 published studies on 4 diabetes datasets\par}
+    \vspace{0.35cm}
+    \begin{tikzpicture}[font=\scriptsize\bfseries,every node/.style={align=center}]
+      \node[draw=qamber,fill=qamber!12,rounded corners=5pt,minimum width=3.8cm,minimum height=1.4cm,line width=1pt](q){Quantum models\\[-1pt]{\tiny\mdseries (simulated on a normal computer)}};
+      \node[draw=qteal,fill=qteal!12,rounded corners=5pt,minimum width=3.8cm,minimum height=1.4cm,right=2.8cm of q,line width=1pt](c){Classical models\\[-1pt]{\tiny\mdseries (standard tools)}};
+      \node[circle,fill=qnavy,text=white,font=\Large\bfseries,minimum size=0.9cm](mid) at ($(q)!0.5!(c)$){?};
+      \draw[-{Stealth},thick,qslate](q.east)--(mid.west);
+      \draw[-{Stealth},thick,qslate](c.west)--(mid.east);
+      \foreach \i in {0,1,2}{\draw[qamber,thick]($(q.south west)+(1.0+0.8*\i,-0.3)$)circle(0.15);}
+      \foreach \i/\h in {0/0.15,1/0.25,2/0.35}{\fill[qteal]($(c.south west)+(1.0+0.7*\i,-0.5)$)rectangle++(0.3,\h);}
+    \end{tikzpicture}\par
+    \vspace{0.5cm}
+    {\scriptsize Independent re-implementation and check. All numbers come from our result files.\par}
+    {\tiny November 2026 $\;\vert\;$ Repository: \texttt{Adaptive-Quantum-Kernel-Selection}\par}
+  \end{center}
+\end{frame}
+
+% ------------------------------------------------------------------ 2 Summary
+\begin{frame}{Four Main Findings}
+  \centering
+  \begin{tikzpicture}[x=1cm,y=1cm]
+    \node[pAcard=qteal](a) at (0,0){\textbf{1. No quantum winner}\\[1pt]\textcolor{qteal}{\pAbig 0.716 vs 0.712}\\[1pt]Quantum-style stacking vs the classical RBF-SVM on Pima (score 0 to 1). The gap is tiny: $p=1.000$ after correction.};
+    \node[pAcard=qamber](b) at (6.75,0){\textbf{2. Repeated rows fake success}\\[1pt]\textcolor{qamber}{\pAbig 251 of 520}\\[1pt]Sylhet rows are different. A random split puts the same row in training and test, so scores rise by 3 to 22 points.};
+    \node[pAcard=qcrimson](c) at (0,-2.5){\textbf{3. Default ZZ settings fail}\\[1pt]\textcolor{qcrimson}{\pAbig 0.525 and 0.653}\\[1pt]ZZ quantum kernel on Pima and Sylhet. Clearly worse than RBF-SVM ($p<0.0001$ and $p=0.001$).};
+    \node[pAcard=qslate](d) at (6.75,-2.5){\textbf{4. Guessing ``healthy'' looks good}\\[1pt]\textcolor{qslate}{\pAbig 86\% and 91\%}\\[1pt]Right answers from always saying ``healthy'' on CDC and Hospital 130. Most quantum models found no sick people.};
+  \end{tikzpicture}
+  \pAfoot{RBF-SVM = radial basis function support vector machine (a standard classical model). ZZ = a quantum feature map built from two-qubit ``ZZ'' rotations. CDC = US Centers for Disease Control health survey. $p$ = chance of such a gap if the models were equal (small = real gap); ``after correction'' = adjusted (Holm) for running many tests. Pima = diabetes study of women; Sylhet = early-stage diabetes questionnaire.}
+\end{frame}
+
+% ------------------------------------------------------------------ 3 Why
+\begin{frame}{Why Diabetes Data?}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,every node/.style={align=center}]
+    \node[font=\footnotesize\bfseries,text=qslate] at (0,2.3){Published studies used};
+    \node[pAbxW=qslate](s1) at (0,1.5){Breast cancer data};
+    \node[pAbxW=qslate](s2) at (0,0.6){Speech audio};
+    \node[pAbxW=qslate](s3) at (0,-0.3){Web addresses};
+    \node[draw=qnavy,fill=qnavy,text=white,rounded corners=4pt,minimum width=2.8cm,minimum height=1.3cm,font=\footnotesize\bfseries](m) at (5.4,0.6){Same methods,\\copied exactly};
+    \node[font=\footnotesize\bfseries,text=qgreen] at (10.6,2.3){We test them on};
+    \node[pAbxW=qgreen](d1) at (10.6,1.7){Pima};
+    \node[pAbxW=qgreen](d2) at (10.6,0.95){Sylhet};
+    \node[pAbxW=qgreen](d3) at (10.6,0.2){CDC survey};
+    \node[pAbxW=qgreen](d4) at (10.6,-0.55){Hospital 130};
+    \foreach \s in {s1,s2,s3}{\draw[-{Stealth},thick,qslate](\s.east)--(m.west);}
+    \foreach \d in {d1,d2,d3,d4}{\draw[-{Stealth},thick,qgreen](m.east)--(\d.west);}
+  \end{tikzpicture}\\[6pt]
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[pAbxT=qteal]{\textbf{Real-world need.} Missing a sick patient is costly.};
+    \node[pAbxT=qamber] at (4.7,0){\textbf{Very different data.} Small tidy tables and big uneven surveys.};
+    \node[pAbxT=qcrimson] at (9.4,0){\textbf{Fair test.} Same rules for every model and dataset.};
+  \end{tikzpicture}
+  \pAfoot{CDC = US Centers for Disease Control health survey. Pima = a classic diabetes study of women (768 people). Sylhet = early-stage diabetes questionnaire. Hospital 130 = hospital records; the question is ``readmitted within 30 days?''.}
+\end{frame}
+
+% ------------------------------------------------------------------ 4 Datasets
+\begin{frame}{The Four Datasets}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[anchor=west,font=\scriptsize\bfseries] at (0,0.3){Dataset};
+    \node[anchor=west,font=\scriptsize\bfseries] at (2.6,0.3){Rows};
+    \node[anchor=west,font=\scriptsize\bfseries] at (3.7,0.3){Sick share (full bar = 100\% of rows)};
+    \node[anchor=west,font=\scriptsize\bfseries,align=left] at (9.4,0.3){Score from always\\guessing the big group};
+    \foreach \n/\r/\p/\f/\note [count=\i] in {Pima/768/34.9/0.65/{},Sylhet/520/61.5/0.62/{only 251 distinct rows},CDC/{2,000}/14/0.86/{random subsample},Hospital 130/{2,000}/8.8/0.91/{first visit per patient}}{
+      \pgfmathsetmacro{\y}{-0.85*\i+0.1}
+      \pgfmathsetmacro{\w}{5.2*\p/100}
+      \node[anchor=west,font=\scriptsize\bfseries] at (0,\y){\n};
+      \node[anchor=west] at (2.6,\y){\r};
+      \fill[qcrimson](3.7,\y-0.2)rectangle({3.7+\w},\y+0.2);
+      \fill[qslate!35]({3.7+\w},\y-0.2)rectangle(8.9,\y+0.2);
+      \node[anchor=west,font=\tiny\bfseries,text=qcrimson!80!black] at (9.0,\y){\p\%};
+      \node[anchor=west,font=\tiny,text=qslate] at (3.7,\y-0.38){\note};
+      \node[anchor=west,font=\large\bfseries,text=qnavy] at (10.9,\y){\f};
+    }
+    \node[anchor=west,font=\tiny] at (3.7,-4.15){\textcolor{qcrimson}{\rule{0.25cm}{0.15cm}} sick (the group we want to find) \quad \textcolor{qslate!50}{\rule{0.25cm}{0.15cm}} not sick};
+  \end{tikzpicture}
+  \pAfoot{CDC = US Centers for Disease Control health survey; its ``sick'' group is self-reported diabetes or prediabetes. Pima = diabetes study of women. Sylhet = early-stage diabetes questionnaire. Hospital 130 = hospital records; ``sick'' means readmitted within 30 days. CDC sick share is rounded (14\%).}
+\end{frame}
+
+% ------------------------------------------------------------------ 5 Scores
+\begin{frame}{How to Read the Scores}
+  \begin{columns}[T]
+    \column{0.36\textwidth}
+      \centering
+      {\scriptsize\textbf{100 people (CDC-like: 14 sick)}}\\[3pt]
+      \begin{tikzpicture}[x=0.3cm,y=0.3cm]
+        \foreach \i in {0,...,99}{
+          \pgfmathtruncatemacro{\cx}{mod(\i,10)}
+          \pgfmathtruncatemacro{\cy}{int(\i/10)}
+          \ifnum\i<14 \fill[qcrimson](\cx,-\cy)circle(0.4);
+          \else \fill[qslate!40](\cx,-\cy)circle(0.4);\fi}
+      \end{tikzpicture}\\[3pt]
+      {\tiny \textcolor{qcrimson}{$\bullet$} sick \quad \textcolor{qslate!60}{$\bullet$} healthy}
+    \column{0.62\textwidth}
+      \begin{tikzpicture}[font=\scriptsize]
+        \node[pAbxL=qnavy] at (0,0){\textbf{A lazy model says ``healthy'' to all 100.}\\ Accuracy: \gval{86 of 100 right}. Recall: \bval{0 of 14 sick found}.};
+        \node[pAbxL=qgreen] at (0,-1.3){\textbf{Recall} = share of sick people found.\\ \textbf{Specificity} = share of healthy people cleared.};
+        \node[pAbxL=qteal] at (0,-2.5){\textbf{Balanced accuracy} = average of recall and specificity.\\ Lazy model: $(0+1)/2=0.50$ = coin flip. \textit{Our main score.}};
+        \node[anchor=west,font=\tiny] at (0,-4.0){Balanced accuracy scale:};
+        \draw[qslate,thick](2.4,-4.0)--(7.6,-4.0);
+        \foreach \v in {0,0.5,1}{\draw[qslate]({2.4+5.2*\v},-3.93)--({2.4+5.2*\v},-4.07);\node[font=\tiny,anchor=north] at ({2.4+5.2*\v},-4.1){\v};}
+        \fill[qcrimson]({2.4+5.2*0.5},-4.0)circle(0.1);
+        \node[font=\tiny,text=qcrimson,anchor=south] at ({2.4+5.2*0.5},-3.88){lazy model};
+      \end{tikzpicture}
+  \end{columns}
+  \pAfoot{CDC = US Centers for Disease Control health survey. The 86\% matches the ``always guess the big group'' score for CDC in our results; the 100-person picture is an illustration at that rate, not real data.}
+\end{frame}
+
+% ------------------------------------------------------------------ 6 Claims
+\begin{frame}{Claims That Do Not Add Up}
+  \centering
+  \begin{tikzpicture}[x=1cm,y=1cm]
+    \node[pAcard=qcrimson](a) at (0,0){\textbf{Kotha et al.: AUC 1.00}\\[1pt]\textcolor{qcrimson}{\pAbig impossible}\\[1pt]The paper's own result shows 25 errors in 150 patients. That caps AUC at 0.97. Our honest test: AUC 0.825.};
+    \node[pAcard=qcrimson](b) at (6.75,0){\textbf{Kiran et al.: 99.7\% correct}\\[1pt]\textcolor{qcrimson}{\pAbig 99.7\% vs 4\% errors}\\[1pt]4\% errors means at most 96\% correct. Our honest quantum circuit model: 0.675 to 0.694 accuracy on Pima.};
+    \node[pAcard=qamber](c) at (0,-2.5){\textbf{Young et al.: made-up test rows}\\[1pt]\textcolor{qamber}{\pAbig CDC 0.951 $\to$ 0.622}\\[1pt]Balanced accuracy once made-up (synthetic) rows leave the test. Hospital 130: 0.977 $\to$ 0.506 (chance).};
+    \node[pAcard=qteal](d) at (6.75,-2.5){\textbf{Daga et al.: partly reproduced}\\[1pt]\textcolor{qteal}{\pAbig stacking yes, ZZ no}\\[1pt]Stacking, Angle and RBF results match. ZZ and Amplitude do not. Claimed AUC 0.734 is below ours (0.830): unexplained.};
+  \end{tikzpicture}
+  \pAfoot{AUC = area under the ROC curve (1.0 = perfect ranking, 0.5 = coin flip). CDC = US Centers for Disease Control health survey. RBF = radial basis function (a classical kernel). ZZ, Angle, Amplitude = three ways of loading data into a quantum circuit. Stacking = a final model that combines other models' answers. Pima = diabetes study of women.}
+\end{frame}
+
+% ------------------------------------------------------------------ 7 Protocol
+\begin{frame}{Paper-Style Test vs Clean Test}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,every node/.style={align=center}]
+    \node[font=\footnotesize\bfseries,text=qcrimson] at (3.2,0.4){Paper-style test};
+    \foreach \i/\t in {0/A,1/B,2/C,3/D}{\node[draw,fill=qslate!15,minimum width=0.7cm,minimum height=0.55cm] at (0.5+0.8*\i,-0.4){\t};}
+    \node[draw=qcrimson,fill=qcrimson!25,minimum width=0.7cm,minimum height=0.55cm] at (4.2,-0.4){C};
+    \node[draw=qcrimson,fill=qcrimson!25,minimum width=0.7cm,minimum height=0.55cm] at (5.0,-0.4){+};
+    \node[font=\tiny] at (1.3,-0.95){training rows};
+    \node[font=\tiny] at (4.6,-0.95){test rows};
+    \draw[qcrimson,thick,-{Stealth}](4.2,-0.72)to[bend left=-30](2.1,-0.72);
+    \node[text width=5.8cm,align=left] at (3.1,-2.5){\xmark\ One split, only 104 to 154 test rows\\\xmark\ Same row (C) in training and test\\\xmark\ Made-up rows (+) can sit in the test\\\xmark\ Plain accuracy on uneven groups};
+    \node[font=\footnotesize\bfseries,text=qgreen] at (10.0,0.4){Clean test};
+    \foreach \i/\a in {0/train,1/train,2/test,3/train,4/train}{\node[draw,minimum width=0.85cm,minimum height=0.4cm,fill=qslate!15,font=\tiny] at (7.7+0.95*\i,-0.2){\a};}
+    \foreach \i/\a in {0/train,1/train,2/train,3/train,4/test}{\node[draw,minimum width=0.85cm,minimum height=0.4cm,fill=qslate!15,font=\tiny] at (7.7+0.95*\i,-0.7){\a};}
+    \fill[qgreen!40](7.7+1.9-0.425,-0.4)rectangle++(0.85,0.4);\draw(7.7+1.9-0.425,-0.4)rectangle++(0.85,0.4);
+    \node[font=\tiny\bfseries] at (7.7+1.9,-0.2){test};
+    \fill[qgreen!40](7.7+3.8-0.425,-0.9)rectangle++(0.85,0.4);\draw(7.7+3.8-0.425,-0.9)rectangle++(0.85,0.4);
+    \node[font=\tiny\bfseries] at (7.7+3.8,-0.7){test};
+    \node[font=\tiny] at (10.0,-1.2){5 folds $\times$ 3 shuffles = 15 scores (2 of 15 shown)};
+    \node[text width=5.8cm,align=left] at (10.0,-2.5){\cmark\ Identical rows stay on one side only\\\cmark\ Scaling and tuning use training rows only\\\cmark\ Test uses real patients only\\\cmark\ Balanced accuracy, recall, specificity};
+  \end{tikzpicture}
+  \pAfoot{Fold = one of 5 equal parts of the data; each part is the test once. Shuffle = a different random split (3 seeds). Synthetic = made-up rows created by a computer. Balanced accuracy = average of recall (sick found) and specificity (healthy cleared).}
+\end{frame}
+
+% ------------------------------------------------------------------ 8 Finding 1
+\begin{frame}{Finding 1: Repeated Rows Inflate Scores}
+  \begin{columns}[T]
+    \column{0.42\textwidth}
+      \centering
+      {\scriptsize\textbf{Sylhet: how many rows are really different?}}\\[2pt]
+      \begin{tikzpicture}
+        \pgfmathsetmacro{\sylw}{5.4*251/520}
+        \fill[qgreen](0,0)rectangle(\sylw,0.45);
+        \fill[qcrimson!70](\sylw,0)rectangle(5.4,0.45);
+        \node[text=white,font=\scriptsize\bfseries] at (\sylw/2,0.22){251 different};
+        \node[text=white,font=\scriptsize\bfseries] at ({(\sylw+5.4)/2},0.22){269 repeats};
+        \node[font=\tiny] at (2.7,-0.2){520 rows in total};
+      \end{tikzpicture}\\[6pt]
+      \begin{tikzpicture}[font=\tiny,every node/.style={align=center}]
+        \node[font=\scriptsize\bfseries,text=qcrimson] at (1.3,1.0){Random split};
+        \foreach \i/\t in {0/A,1/B,2/C}{\node[draw,fill=qslate!15,minimum width=0.55cm,minimum height=0.45cm] at (0.4+0.65*\i,0.35){\t};}
+        \node[draw=qcrimson,fill=qcrimson!25,minimum width=0.55cm,minimum height=0.45cm] at (2.6,0.35){C};
+        \draw[qcrimson,-{Stealth}](2.6,0.05)to[bend left=-35](1.05,0.05);
+        \node[text=qcrimson] at (1.6,-0.5){test row C was seen in training};
+        \node[font=\scriptsize\bfseries,text=qgreen] at (5.2,1.0){Grouped split};
+        \foreach \i/\t in {0/A,1/B}{\node[draw,fill=qslate!15,minimum width=0.55cm,minimum height=0.45cm] at (4.3+0.65*\i,0.35){\t};}
+        \node[draw=qgreen,fill=qgreen!25,minimum width=0.55cm,minimum height=0.45cm] at (6.1,0.35){C};
+        \node[text=qgreen] at (5.2,-0.5){C only in test};
+      \end{tikzpicture}\\[4pt]
+      {\scriptsize Score = accuracy, paper-style (random) vs clean (grouped)}
+    \column{0.56\textwidth}
+      \begin{tikzpicture}[font=\tiny,x=1cm,y=1cm]
+        \pgfmathsetmacro{\sc}{3.3}
+        \foreach \lab/\lk/\cl/\gp [count=\i] in {ZZ quantum kernel (width 1)/0.942/0.721/22.2,Z quantum kernel (width 1)/0.981/0.790/19.0,Amplitude quantum kernel/0.919/0.823/9.6,LightGBM + GIF weights/0.962/0.869/9.3,Random forest/0.981/0.930/5.1,RBF-SVM (classical)/0.973/0.928/4.5}{
+          \pgfmathsetmacro{\y}{-0.52*\i}
+          \node[anchor=east,font=\tiny] at (2.55,\y-0.08){\lab};
+          \fill[qslate!45](2.65,\y)rectangle({2.65+\sc*\lk},\y+0.17);
+          \fill[qgreen](2.65,\y-0.19)rectangle({2.65+\sc*\cl},\y-0.02);
+          \node[anchor=west,font=\tiny] at ({2.7+\sc*\lk},\y+0.08){\lk};
+          \node[anchor=west,font=\tiny] at ({2.7+\sc*\cl},\y-0.1){\cl};
+          \node[anchor=west,font=\tiny\bfseries,text=qcrimson] at (6.75,\y-0.08){$-$\gp};
+        }
+        \draw[qslate](2.65,-0.3)--(2.65,-3.45);
+        \node[font=\tiny\bfseries,anchor=west,text=qcrimson] at (6.65,-0.1){points lost};
+        \fill[qslate!45](2.65,-3.75)rectangle++(0.3,0.14);\node[anchor=west] at (3.0,-3.68){paper-style};
+        \fill[qgreen](4.4,-3.75)rectangle++(0.3,0.14);\node[anchor=west] at (4.75,-3.68){clean};
+        \node[anchor=west,text=qslate] at (2.65,-3.95){bar length: 0 to 1.0 on the same scale};
+      \end{tikzpicture}
+  \end{columns}
+  \vspace{2pt}
+  {\scriptsize\textbf{Takeaway:} models that can learn rows by heart lose most when repeats are blocked. High published Sylhet scores mostly reflect memorising.\par}
+  \pAfoot{ZZ, Z, Amplitude = ways of loading data into a quantum circuit; ``width 1'' = a fixed kernel scale setting. LightGBM = light gradient boosting machine. GIF = graph intuitionistic fuzzy (a weighting method from Zhang et al.). RBF-SVM = radial basis function support vector machine. Sylhet = early-stage diabetes questionnaire. Lost points are computed from unrounded values (report table).}
+\end{frame}
+
+% ------------------------------------------------------------------ 9 Finding 2
+\begin{frame}{Finding 2: No Quantum Advantage}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \centering
+      {\scriptsize\textbf{Balanced accuracy (0.5 = coin flip, 1.0 = perfect)}}\\[2pt]
+      \begin{tikzpicture}[font=\tiny,x=1cm,y=1cm]
+        \pgfmathsetmacro{\hs}{3.2}
+        \foreach \g/\nm/\a/\b/\c in {0/Pima/0.712/0.716/0.711,1/Sylhet/0.923/0.923/0.882,2/CDC/0.531/0.558/0.500,3/Hospital 130/0.500/0.500/0.500}{
+          \pgfmathsetmacro{\x}{1.5*\g}
+          \fill[qslate](\x,0)rectangle++(0.38,{\hs*\a});
+          \fill[qteal]({\x+0.4},0)rectangle++(0.38,{\hs*\b});
+          \fill[qamber]({\x+0.8},0)rectangle++(0.38,{\hs*\c});
+          \node[anchor=south,rotate=90,anchor=west] at ({\x+0.19},{\hs*\a+0.03}){\a};
+          \node[anchor=south,rotate=90,anchor=west] at ({\x+0.59},{\hs*\b+0.03}){\b};
+          \node[anchor=south,rotate=90,anchor=west] at ({\x+0.99},{\hs*\c+0.03}){\c};
+          \node[font=\scriptsize\bfseries] at ({\x+0.6},-0.25){\nm};
+        }
+        \draw[qslate](-0.1,0)--(5.9,0);
+        \draw[qcrimson,dashed]({-0.1},{\hs*0.5})--(5.9,{\hs*0.5})node[anchor=south east,text=qcrimson]{chance 0.5};
+        \fill[qslate](0,3.95)rectangle++(0.25,0.12);\node[anchor=west] at (0.3,4.01){RBF-SVM};
+        \fill[qteal](1.5,3.95)rectangle++(0.25,0.12);\node[anchor=west] at (1.8,4.01){quantum stacking};
+        \fill[qamber](3.6,3.95)rectangle++(0.25,0.12);\node[anchor=west] at (3.9,4.01){Angle quantum kernel};
+      \end{tikzpicture}
+    \column{0.43\textwidth}
+      \centering
+      {\scriptsize\textbf{Models vs RBF-SVM (36 tested each)}}\\[2pt]
+      \begin{tikzpicture}[font=\tiny,x=1cm,y=1cm]
+        \pgfmathsetmacro{\cs}{3.5/36}
+        \foreach \nm/\w/\n/\b [count=\i] in {Pima/9/27/0,Sylhet/6/30/0,CDC/0/25/11,Hosp. 130/0/36/0}{
+          \pgfmathsetmacro{\y}{-0.6*\i+0.4}
+          \node[anchor=east] at (1.0,\y){\nm};
+          \pgfmathsetmacro{\xa}{1.05+\cs*\w}
+          \pgfmathsetmacro{\xb}{1.05+\cs*(\w+\n)}
+          \pgfmathsetmacro{\xc}{1.05+\cs*(\w+\n+\b)}
+          \ifnum\w>0 \fill[qcrimson](1.05,\y-0.17)rectangle(\xa,\y+0.17);\node[text=white,font=\tiny\bfseries] at ({(1.05+\xa)/2},\y){\w};\fi
+          \fill[qslate!35](\xa,\y-0.17)rectangle(\xb,\y+0.17);\node[font=\tiny] at ({(\xa+\xb)/2},\y){\n};
+          \ifnum\b>0 \fill[qgreen](\xb,\y-0.17)rectangle(\xc,\y+0.17);\node[text=white,font=\tiny\bfseries] at ({(\xb+\xc)/2},\y){\b};\fi
+        }
+        \fill[qcrimson](1.05,-2.55)rectangle++(0.22,0.12);\node[anchor=west] at (1.3,-2.49){worse};
+        \fill[qslate!35](2.1,-2.55)rectangle++(0.22,0.12);\node[anchor=west] at (2.35,-2.49){no clear difference};
+        \fill[qgreen](3.9,-2.55)rectangle++(0.22,0.12);\node[anchor=west] at (4.15,-2.49){better};
+      \end{tikzpicture}\\[2pt]
+      {\tiny CDC ``better'' comes from class weighting or a tuned cut-off, not from quantum methods. Pima, Sylhet, Hospital 130: nothing beats RBF-SVM.}
+  \end{columns}
+  \vspace{2pt}
+  {\scriptsize Quantum models were exact simulations (up to 8 qubits), not real quantum hardware. Run-time claims are not verified here, so they were removed.\par}
+  \pAfoot{RBF-SVM = radial basis function support vector machine (classical). Angle = a way of loading data into a quantum circuit. Stacking = a final model that combines other models' answers. CDC = US Centers for Disease Control health survey. Hosp. 130 = Hospital 130 (hospital records). Qubit = quantum bit. Counts are from careful (Holm-corrected) paired tests.}
+\end{frame}
